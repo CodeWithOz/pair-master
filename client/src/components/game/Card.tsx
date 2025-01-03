@@ -18,24 +18,55 @@ export function Card({
   isFailAnimation,
   onClick 
 }: CardProps) {
+  const getCardStyle = () => {
+    if (isMatchAnimation) {
+      return {
+        background: "bg-green-100",
+        text: "text-green-800",
+        ring: "ring-2 ring-green-500"
+      };
+    }
+    if (isMatched) {
+      return {
+        background: "bg-gray-100",
+        text: "text-gray-400",
+        ring: "ring-1 ring-gray-200"
+      };
+    }
+    if (isSelected && !isMatched) {
+      return {
+        background: "bg-blue-50",
+        text: "text-blue-800",
+        ring: "ring-2 ring-blue-500"
+      };
+    }
+    if (isFailAnimation) {
+      return {
+        background: "bg-red-100",
+        text: "text-red-800",
+        ring: "ring-2 ring-red-500"
+      };
+    }
+    return {
+      background: "hover:bg-gray-50",
+      text: "text-gray-900",
+      ring: ""
+    };
+  };
+
+  const styles = getCardStyle();
+
   return (
     <ShadcnCard
       className={cn(
         "flex items-center justify-center p-6 cursor-pointer transition-all duration-200 min-h-[100px]",
-        isMatchAnimation && "bg-green-100 text-green-800",
-        isMatched && "bg-gray-100 text-gray-400 cursor-default",
-        isSelected && !isMatched && "bg-blue-50 ring-2 ring-blue-300",
-        isFailAnimation && "bg-red-100 text-red-800",
-        !isMatched && !isSelected && !isMatchAnimation && !isFailAnimation && "hover:bg-gray-50"
+        styles.background,
+        styles.ring,
+        isMatched && "cursor-default"
       )}
       onClick={onClick}
     >
-      <span 
-        className={cn(
-          "text-lg font-medium",
-          isMatched && "text-gray-400"
-        )}
-      >
+      <span className={cn("text-lg font-medium", styles.text)}>
         {word}
       </span>
     </ShadcnCard>

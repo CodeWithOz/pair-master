@@ -26,6 +26,7 @@ export function GameBoard() {
   });
   const [matchAnimation, setMatchAnimation] = useState<number | null>(null);
   const [failAnimation, setFailAnimation] = useState<boolean>(false);
+  const [transitionInProgress, setTransitionInProgress] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -43,11 +44,33 @@ export function GameBoard() {
     return [...cards.leftColumn, ...cards.rightColumn].find(c => c.id === cardId);
   };
 
+  const isCardInLeftColumn = (cardId: string): boolean => {
+    return cards.leftColumn.some(card => card.id === cardId);
+  };
+
   const handleCardClick = (cardId: string) => {
+    if (transitionInProgress) return;
+
     const card = findCardInColumns(cardId);
     if (!card || card.isMatched || selectedCards.includes(cardId)) return;
 
-    const newSelected = [...selectedCards, cardId];
+    const isLeftColumn = isCardInLeftColumn(cardId);
+    let newSelected = [...selectedCards];
+
+    // If clicking in same column as an existing selection, replace that selection
+    if (selectedCards.length === 1) {
+      const existingCard = findCardInColumns(selectedCards[0])!;
+      const existingIsLeft = isCardInLeftColumn(existingCard.id);
+
+      if (isLeftColumn === existingIsLeft) {
+        newSelected = [cardId];
+      } else {
+        newSelected.push(cardId);
+      }
+    } else {
+      newSelected.push(cardId);
+    }
+
     setSelectedCards(newSelected);
 
     if (newSelected.length === 2) {
@@ -57,7 +80,9 @@ export function GameBoard() {
 
       if (firstCard.pairId === secondCard.pairId) {
         // Match found
+        setTransitionInProgress(true);
         setMatchAnimation(firstCard.pairId);
+
         setTimeout(() => {
           setMatchAnimation(null);
           setCards(current => ({
@@ -86,6 +111,7 @@ export function GameBoard() {
           }
 
           setSelectedCards([]);
+          setTransitionInProgress(false);
         }, 1000);
 
         if (progress.matchedPairsInLevel + 1 === cards.leftColumn.length) {
