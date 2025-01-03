@@ -15,27 +15,78 @@ export const difficultyLevels = {
 
 export type DifficultyLevel = keyof typeof difficultyLevels;
 
+export const difficultySettings = {
+  1: { timeLimit: 180, requiredPairs: 15, displayedPairs: 5 }, // 3:00 minutes
+  2: { timeLimit: 150, requiredPairs: 20, displayedPairs: 5 }, // 2:30 minutes
+  3: { timeLimit: 120, requiredPairs: 25, displayedPairs: 5 }  // 2:00 minutes
+} as const;
+
 export const wordPairs: WordPair[] = [
-  // Beginner (Level 1)
+  // Beginner (Level 1) - 15 pairs
   { id: 1, german: "viel", english: "much", difficulty: 1 },
   { id: 2, german: "Taxifahrt", english: "taxi ride", difficulty: 1 },
   { id: 3, german: "noch", english: "still", difficulty: 1 },
   { id: 4, german: "fünfzehn", english: "fifteen", difficulty: 1 },
   { id: 5, german: "Riesenrad", english: "Ferris wheel", difficulty: 1 },
+  { id: 6, german: "Buch", english: "book", difficulty: 1 },
+  { id: 7, german: "Haus", english: "house", difficulty: 1 },
+  { id: 8, german: "Katze", english: "cat", difficulty: 1 },
+  { id: 9, german: "Hund", english: "dog", difficulty: 1 },
+  { id: 10, german: "Wasser", english: "water", difficulty: 1 },
+  { id: 11, german: "Brot", english: "bread", difficulty: 1 },
+  { id: 12, german: "Stadt", english: "city", difficulty: 1 },
+  { id: 13, german: "Tag", english: "day", difficulty: 1 },
+  { id: 14, german: "Nacht", english: "night", difficulty: 1 },
+  { id: 15, german: "Zeit", english: "time", difficulty: 1 },
 
-  // Intermediate (Level 2)
-  { id: 6, german: "Entwicklung", english: "development", difficulty: 2 },
-  { id: 7, german: "Wissenschaft", english: "science", difficulty: 2 },
-  { id: 8, german: "Gesellschaft", english: "society", difficulty: 2 },
-  { id: 9, german: "Erfahrung", english: "experience", difficulty: 2 },
-  { id: 10, german: "Verwaltung", english: "administration", difficulty: 2 },
+  // Intermediate (Level 2) - 20 pairs
+  { id: 16, german: "Entwicklung", english: "development", difficulty: 2 },
+  { id: 17, german: "Wissenschaft", english: "science", difficulty: 2 },
+  { id: 18, german: "Gesellschaft", english: "society", difficulty: 2 },
+  { id: 19, german: "Erfahrung", english: "experience", difficulty: 2 },
+  { id: 20, german: "Verwaltung", english: "administration", difficulty: 2 },
+  { id: 21, german: "Beziehung", english: "relationship", difficulty: 2 },
+  { id: 22, german: "Ausbildung", english: "education", difficulty: 2 },
+  { id: 23, german: "Möglichkeit", english: "possibility", difficulty: 2 },
+  { id: 24, german: "Umgebung", english: "environment", difficulty: 2 },
+  { id: 25, german: "Verhalten", english: "behavior", difficulty: 2 },
+  { id: 26, german: "Bedeutung", english: "meaning", difficulty: 2 },
+  { id: 27, german: "Bewegung", english: "movement", difficulty: 2 },
+  { id: 28, german: "Gedanke", english: "thought", difficulty: 2 },
+  { id: 29, german: "Jugend", english: "youth", difficulty: 2 },
+  { id: 30, german: "Zukunft", english: "future", difficulty: 2 },
+  { id: 31, german: "Freiheit", english: "freedom", difficulty: 2 },
+  { id: 32, german: "Wahrheit", english: "truth", difficulty: 2 },
+  { id: 33, german: "Kenntnis", english: "knowledge", difficulty: 2 },
+  { id: 34, german: "Ordnung", english: "order", difficulty: 2 },
+  { id: 35, german: "Leistung", english: "performance", difficulty: 2 },
 
-  // Advanced (Level 3)
-  { id: 11, german: "Nachhaltigkeit", english: "sustainability", difficulty: 3 },
-  { id: 12, german: "Wahrscheinlichkeit", english: "probability", difficulty: 3 },
-  { id: 13, german: "Zusammenarbeit", english: "collaboration", difficulty: 3 },
-  { id: 14, german: "Verantwortung", english: "responsibility", difficulty: 3 },
-  { id: 15, german: "Geschwindigkeit", english: "velocity", difficulty: 3 }
+  // Advanced (Level 3) - 25 pairs
+  { id: 36, german: "Nachhaltigkeit", english: "sustainability", difficulty: 3 },
+  { id: 37, german: "Wahrscheinlichkeit", english: "probability", difficulty: 3 },
+  { id: 38, german: "Zusammenarbeit", english: "collaboration", difficulty: 3 },
+  { id: 39, german: "Verantwortung", english: "responsibility", difficulty: 3 },
+  { id: 40, german: "Geschwindigkeit", english: "velocity", difficulty: 3 },
+  { id: 41, german: "Entschuldigung", english: "apology", difficulty: 3 },
+  { id: 42, german: "Gleichberechtigung", english: "equality", difficulty: 3 },
+  { id: 43, german: "Unabhängigkeit", english: "independence", difficulty: 3 },
+  { id: 44, german: "Wirtschaftlichkeit", english: "economy", difficulty: 3 },
+  { id: 45, german: "Zweckmäßigkeit", english: "practicality", difficulty: 3 },
+  { id: 46, german: "Persönlichkeit", english: "personality", difficulty: 3 },
+  { id: 47, german: "Gerechtigkeit", english: "justice", difficulty: 3 },
+  { id: 48, german: "Vollständigkeit", english: "completeness", difficulty: 3 },
+  { id: 49, german: "Zuverlässigkeit", english: "reliability", difficulty: 3 },
+  { id: 50, german: "Vertraulichkeit", english: "confidentiality", difficulty: 3 },
+  { id: 51, german: "Ausführlichkeit", english: "thoroughness", difficulty: 3 },
+  { id: 52, german: "Unsterblichkeit", english: "immortality", difficulty: 3 },
+  { id: 53, german: "Beständigkeit", english: "consistency", difficulty: 3 },
+  { id: 54, german: "Aufrichtigkeit", english: "sincerity", difficulty: 3 },
+  { id: 55, german: "Freundlichkeit", english: "friendliness", difficulty: 3 },
+  { id: 56, german: "Menschlichkeit", english: "humanity", difficulty: 3 },
+  { id: 57, german: "Bescheidenheit", english: "modesty", difficulty: 3 },
+  { id: 58, german: "Besonderheit", english: "peculiarity", difficulty: 3 },
+  { id: 59, german: "Verfügbarkeit", english: "availability", difficulty: 3 },
+  { id: 60, german: "Zugehörigkeit", english: "affiliation", difficulty: 3 }
 ];
 
 export interface GameCard {
@@ -50,9 +101,9 @@ export interface GameProgress {
   currentLevel: DifficultyLevel;
   highestUnlockedLevel: DifficultyLevel;
   matchedPairsInLevel: number;
+  remainingTime: number;
+  isComplete: boolean;
 }
-
-const PAIRS_TO_UNLOCK_NEXT_LEVEL = 4;
 
 export function isLevelUnlocked(progress: GameProgress, level: DifficultyLevel): boolean {
   return level <= progress.highestUnlockedLevel;
@@ -60,9 +111,11 @@ export function isLevelUnlocked(progress: GameProgress, level: DifficultyLevel):
 
 export function canUnlockNextLevel(progress: GameProgress): boolean {
   const nextLevel = (progress.currentLevel + 1) as DifficultyLevel;
+  const settings = difficultySettings[progress.currentLevel];
   return (
-    progress.matchedPairsInLevel >= PAIRS_TO_UNLOCK_NEXT_LEVEL &&
-    nextLevel in difficultyLevels
+    progress.matchedPairsInLevel >= settings.requiredPairs &&
+    nextLevel in difficultyLevels &&
+    progress.isComplete
   );
 }
 
@@ -70,12 +123,19 @@ export function getWordPairsForLevel(level: DifficultyLevel): WordPair[] {
   return wordPairs.filter(pair => pair.difficulty === level);
 }
 
-export function generateGameCards(level: DifficultyLevel): { leftColumn: GameCard[], rightColumn: GameCard[] } {
-  const levelWordPairs = getWordPairsForLevel(level);
+export function generateGameCards(level: DifficultyLevel, excludePairIds: number[] = []): { leftColumn: GameCard[], rightColumn: GameCard[] } {
+  const levelWordPairs = getWordPairsForLevel(level)
+    .filter(pair => !excludePairIds.includes(pair.id));
+
+  // Get random pairs up to displayedPairs
+  const selectedPairs = levelWordPairs
+    .sort(() => Math.random() - 0.5)
+    .slice(0, difficultySettings[level].displayedPairs);
+
   const leftCards: GameCard[] = [];
   const rightCards: GameCard[] = [];
 
-  levelWordPairs.forEach(pair => {
+  selectedPairs.forEach(pair => {
     leftCards.push({
       id: `en-${pair.id}`,
       word: pair.english,

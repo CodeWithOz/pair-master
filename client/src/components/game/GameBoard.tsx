@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card } from "./Card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -6,7 +6,8 @@ import {
   type GameCard, 
   type GameProgress,
   type DifficultyLevel,
-  canUnlockNextLevel
+  canUnlockNextLevel,
+  difficultySettings
 } from "@/lib/game-data";
 import { useToast } from "@/hooks/use-toast";
 import { DifficultySelector } from "./DifficultySelector";
@@ -22,22 +23,55 @@ export function GameBoard() {
   const [progress, setProgress] = useState<GameProgress>({
     currentLevel: 1 as DifficultyLevel,
     highestUnlockedLevel: 1 as DifficultyLevel,
-    matchedPairsInLevel: 0
+    matchedPairsInLevel: 0,
+    remainingTime: difficultySettings[1].timeLimit,
+    isComplete: false
   });
   const [matchAnimation, setMatchAnimation] = useState<number | null>(null);
   const [failAnimation, setFailAnimation] = useState<boolean>(false);
   const [transitionInProgress, setTransitionInProgress] = useState(false);
+  const [usedPairIds, setUsedPairIds] = useState<number[]>([]);
   const { toast } = useToast();
 
+  // Timer effect
+  useEffect(() => {
+    if (progress.remainingTime <= 0 || progress.isComplete) return;
+
+    const timer = setInterval(() => {
+      setProgress(prev => {
+        const newTime = prev.remainingTime - 1;
+        if (newTime <= 0) {
+          toast({
+            title: "Time's Up!",
+            description: "Try again or select a different level.",
+          });
+          return { ...prev, remainingTime: 0 };
+        }
+        return { ...prev, remainingTime: newTime };
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [progress.remainingTime, progress.isComplete, toast]);
+
+  // Reset game when changing levels
   useEffect(() => {
     resetGame();
   }, [progress.currentLevel]);
 
   const resetGame = () => {
+    const settings = difficultySettings[progress.currentLevel];
     setCards(generateGameCards(progress.currentLevel));
     setSelectedCards([]);
     setMatchAnimation(null);
     setFailAnimation(false);
+    setUsedPairIds([]);
+    setProgress(prev => ({
+      ...prev,
+      remainingTime: settings.timeLimit,
+      matchedPairsInLevel: 0,
+      isComplete: false
+    }));
   };
 
   const findCardInColumns = (cardId: string): GameCard | undefined => {
@@ -48,8 +82,29 @@ export function GameBoard() {
     return cards.leftColumn.some(card => card.id === cardId);
   };
 
+  const replaceMatchedCards = useCallback(() => {
+    const allMatchedPairIds = [...cards.leftColumn, ...cards.rightColumn]
+      .filter(card => card.isMatched)
+      .map(card => card.pairId);
+
+    setUsedPairIds(prev => [...prev, ...allMatchedPairIds]);
+
+    // Generate new cards excluding used pairs
+    const newCards = generateGameCards(progress.currentLevel, usedPairIds);
+
+    // Replace matched cards with new ones
+    setCards(current => ({
+      leftColumn: current.leftColumn.map(card => 
+        card.isMatched ? newCards.leftColumn.find(c => !current.leftColumn.some(existing => existing.pairId === c.pairId)) || card : card
+      ),
+      rightColumn: current.rightColumn.map(card =>
+        card.isMatched ? newCards.rightColumn.find(c => !current.rightColumn.some(existing => existing.pairId === c.pairId)) || card : card
+      )
+    }));
+  }, [progress.currentLevel, usedPairIds]);
+
   const handleCardClick = (cardId: string) => {
-    if (transitionInProgress) return;
+    if (transitionInProgress || progress.remainingTime <= 0 || progress.isComplete) return;
 
     const card = findCardInColumns(cardId);
     if (!card || card.isMatched || selectedCards.includes(cardId)) return;
@@ -95,31 +150,31 @@ export function GameBoard() {
           }));
 
           const newMatchedPairs = progress.matchedPairsInLevel + 1;
+          const settings = difficultySettings[progress.currentLevel];
+          const levelComplete = newMatchedPairs >= settings.requiredPairs;
+
           setProgress(prev => ({
             ...prev,
             matchedPairsInLevel: newMatchedPairs,
-            highestUnlockedLevel: canUnlockNextLevel({ ...prev, matchedPairsInLevel: newMatchedPairs })
+            isComplete: levelComplete,
+            highestUnlockedLevel: levelComplete && canUnlockNextLevel({
+              ...prev,
+              matchedPairsInLevel: newMatchedPairs,
+              isComplete: levelComplete
+            })
               ? Math.min((prev.currentLevel + 1) as DifficultyLevel, 3 as DifficultyLevel)
               : prev.highestUnlockedLevel
           }));
 
-          if (canUnlockNextLevel({ ...progress, matchedPairsInLevel: newMatchedPairs })) {
-            toast({
-              title: "New Level Unlocked!",
-              description: `You've unlocked Level ${progress.currentLevel + 1}!`,
-            });
-          }
-
           setSelectedCards([]);
           setTransitionInProgress(false);
+
+          // Replace matched cards if there are still pairs to match
+          if (!levelComplete) {
+            replaceMatchedCards();
+          }
         }, 1000);
 
-        if (progress.matchedPairsInLevel + 1 === cards.leftColumn.length) {
-          toast({
-            title: "Level Complete!",
-            description: "You've matched all the pairs! Try the next level if available.",
-          });
-        }
       } else {
         // No match
         setTransitionInProgress(true);
@@ -137,8 +192,16 @@ export function GameBoard() {
     setProgress(prev => ({
       ...prev,
       currentLevel: level,
-      matchedPairsInLevel: 0
+      matchedPairsInLevel: 0,
+      remainingTime: difficultySettings[level].timeLimit,
+      isComplete: false
     }));
+  };
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -147,6 +210,14 @@ export function GameBoard() {
         progress={progress}
         onSelectLevel={handleLevelSelect}
       />
+      <div className="text-center mb-4">
+        <div className="text-2xl font-bold">
+          Time: {formatTime(progress.remainingTime)}
+        </div>
+        <div className="text-sm text-gray-600">
+          Matches: {progress.matchedPairsInLevel} / {difficultySettings[progress.currentLevel].requiredPairs}
+        </div>
+      </div>
       <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto mb-8">
         <div className="space-y-4">
           {cards.leftColumn.map((card) => (
