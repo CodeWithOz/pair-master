@@ -1,15 +1,41 @@
+import { z } from "zod";
+
 export interface WordPair {
   id: number;
   german: string;
   english: string;
+  difficulty: number;
 }
 
+export const difficultyLevels = {
+  1: "Beginner",
+  2: "Intermediate",
+  3: "Advanced"
+} as const;
+
+export type DifficultyLevel = keyof typeof difficultyLevels;
+
 export const wordPairs: WordPair[] = [
-  { id: 1, german: "viel", english: "much" },
-  { id: 2, german: "Taxifahrt", english: "taxi ride" },
-  { id: 3, german: "noch", english: "still" },
-  { id: 4, german: "fünfzehn", english: "fifteen" },
-  { id: 5, german: "Riesenrad", english: "Ferris wheel" }
+  // Beginner (Level 1)
+  { id: 1, german: "viel", english: "much", difficulty: 1 },
+  { id: 2, german: "Taxifahrt", english: "taxi ride", difficulty: 1 },
+  { id: 3, german: "noch", english: "still", difficulty: 1 },
+  { id: 4, german: "fünfzehn", english: "fifteen", difficulty: 1 },
+  { id: 5, german: "Riesenrad", english: "Ferris wheel", difficulty: 1 },
+
+  // Intermediate (Level 2)
+  { id: 6, german: "Entwicklung", english: "development", difficulty: 2 },
+  { id: 7, german: "Wissenschaft", english: "science", difficulty: 2 },
+  { id: 8, german: "Gesellschaft", english: "society", difficulty: 2 },
+  { id: 9, german: "Erfahrung", english: "experience", difficulty: 2 },
+  { id: 10, german: "Verwaltung", english: "administration", difficulty: 2 },
+
+  // Advanced (Level 3)
+  { id: 11, german: "Nachhaltigkeit", english: "sustainability", difficulty: 3 },
+  { id: 12, german: "Wahrscheinlichkeit", english: "probability", difficulty: 3 },
+  { id: 13, german: "Zusammenarbeit", english: "collaboration", difficulty: 3 },
+  { id: 14, german: "Verantwortung", english: "responsibility", difficulty: 3 },
+  { id: 15, german: "Geschwindigkeit", english: "velocity", difficulty: 3 }
 ];
 
 export interface GameCard {
@@ -20,11 +46,36 @@ export interface GameCard {
   isMatched: boolean;
 }
 
-export function generateGameCards(): { leftColumn: GameCard[], rightColumn: GameCard[] } {
+export interface GameProgress {
+  currentLevel: DifficultyLevel;
+  highestUnlockedLevel: DifficultyLevel;
+  matchedPairsInLevel: number;
+}
+
+const PAIRS_TO_UNLOCK_NEXT_LEVEL = 4;
+
+export function isLevelUnlocked(progress: GameProgress, level: DifficultyLevel): boolean {
+  return level <= progress.highestUnlockedLevel;
+}
+
+export function canUnlockNextLevel(progress: GameProgress): boolean {
+  const nextLevel = (progress.currentLevel + 1) as DifficultyLevel;
+  return (
+    progress.matchedPairsInLevel >= PAIRS_TO_UNLOCK_NEXT_LEVEL &&
+    nextLevel in difficultyLevels
+  );
+}
+
+export function getWordPairsForLevel(level: DifficultyLevel): WordPair[] {
+  return wordPairs.filter(pair => pair.difficulty === level);
+}
+
+export function generateGameCards(level: DifficultyLevel): { leftColumn: GameCard[], rightColumn: GameCard[] } {
+  const levelWordPairs = getWordPairsForLevel(level);
   const leftCards: GameCard[] = [];
   const rightCards: GameCard[] = [];
 
-  wordPairs.forEach(pair => {
+  levelWordPairs.forEach(pair => {
     leftCards.push({
       id: `en-${pair.id}`,
       word: pair.english,
