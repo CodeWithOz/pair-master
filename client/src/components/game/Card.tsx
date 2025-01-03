@@ -26,6 +26,13 @@ export function Card({
         ring: "ring-2 ring-green-500"
       };
     }
+    if (isFailAnimation) {
+      return {
+        background: "bg-red-100",
+        text: "text-red-800",
+        ring: "ring-2 ring-red-500"
+      };
+    }
     if (isMatched) {
       return {
         background: "bg-gray-100",
@@ -38,13 +45,6 @@ export function Card({
         background: "bg-blue-50",
         text: "text-blue-800",
         ring: "ring-2 ring-blue-500"
-      };
-    }
-    if (isFailAnimation) {
-      return {
-        background: "bg-red-100",
-        text: "text-red-800",
-        ring: "ring-2 ring-red-500"
       };
     }
     return {
@@ -62,11 +62,15 @@ export function Card({
         "flex items-center justify-center p-6 cursor-pointer transition-all duration-200 min-h-[100px]",
         styles.background,
         styles.ring,
-        isMatched && "cursor-default"
+        isMatched && "cursor-default",
+        (isMatchAnimation || isFailAnimation) && "transform transition-transform"
       )}
       onClick={onClick}
     >
-      <span className={cn("text-lg font-medium", styles.text)}>
+      <span className={cn(
+        "text-lg font-medium transition-colors duration-200",
+        styles.text
+      )}>
         {word}
       </span>
     </ShadcnCard>
