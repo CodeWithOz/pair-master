@@ -122,10 +122,12 @@ export function GameBoard() {
         }
       } else {
         // No match
+        setTransitionInProgress(true);
         setFailAnimation(true);
         setTimeout(() => {
           setFailAnimation(false);
           setSelectedCards([]);
+          setTransitionInProgress(false);
         }, 1000);
       }
     }
