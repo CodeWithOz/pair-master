@@ -20,32 +20,38 @@ export interface GameCard {
   isMatched: boolean;
 }
 
-export function generateGameCards(): GameCard[] {
-  const cards: GameCard[] = [];
-  
+export function generateGameCards(): { leftColumn: GameCard[], rightColumn: GameCard[] } {
+  const leftCards: GameCard[] = [];
+  const rightCards: GameCard[] = [];
+
   wordPairs.forEach(pair => {
-    cards.push({
-      id: `de-${pair.id}`,
-      word: pair.german,
-      pairId: pair.id,
-      language: 'german',
-      isMatched: false
-    });
-    
-    cards.push({
+    leftCards.push({
       id: `en-${pair.id}`,
       word: pair.english,
       pairId: pair.id,
       language: 'english',
       isMatched: false
     });
+
+    rightCards.push({
+      id: `de-${pair.id}`,
+      word: pair.german,
+      pairId: pair.id,
+      language: 'german',
+      isMatched: false
+    });
   });
 
-  // Fisher-Yates shuffle
-  for (let i = cards.length - 1; i > 0; i--) {
+  // Shuffle each column independently
+  for (let i = leftCards.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [cards[i], cards[j]] = [cards[j], cards[i]];
+    [leftCards[i], leftCards[j]] = [leftCards[j], leftCards[i]];
   }
 
-  return cards;
+  for (let i = rightCards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [rightCards[i], rightCards[j]] = [rightCards[j], rightCards[i]];
+  }
+
+  return { leftColumn: leftCards, rightColumn: rightCards };
 }
