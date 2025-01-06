@@ -28,16 +28,43 @@ export function GameBoard() {
     matchedPairsInLevel: 0,
     remainingTime: difficultySettings[1].timeLimit,
     isComplete: false,
-    unusedPairs: getInitialShuffledPairs(1).slice(difficultySettings[1].displayedPairs) // Initialize excluding displayed pairs
+    unusedPairs: [] // Initialize empty, will be populated in useEffect
   });
+  const [isLoading, setIsLoading] = useState(true);
   const [matchAnimation, setMatchAnimation] = useState<number | null>(null);
   const [failAnimation, setFailAnimation] = useState<boolean>(false);
   const [transitionInProgress, setTransitionInProgress] = useState(false);
   const { toast } = useToast();
 
+  // Initialize game state
+  useEffect(() => {
+    const initializeGame = async () => {
+      try {
+        const initialPairs = await getInitialShuffledPairs(1);
+        const settings = difficultySettings[1];
+
+        setProgress(prev => ({
+          ...prev,
+          unusedPairs: initialPairs.slice(settings.displayedPairs)
+        }));
+
+        setCards(generateGameCards(1, initialPairs));
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Failed to initialize game:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load game data. Please try again.",
+        });
+      }
+    };
+
+    initializeGame();
+  }, [toast]);
+
   // Timer effect
   useEffect(() => {
-    if (progress.remainingTime <= 0 || progress.isComplete) return;
+    if (progress.remainingTime <= 0 || progress.isComplete || isLoading) return;
 
     let timeoutId: NodeJS.Timeout;
 
@@ -55,43 +82,54 @@ export function GameBoard() {
           return { ...prev, remainingTime: newTime };
         });
 
-        // Schedule next tick if time remaining and not complete
         if (progress.remainingTime > 1 && !progress.isComplete) {
           runTimer();
         }
       }, 1000);
     };
 
-    runTimer(); // Start the timer
+    runTimer();
 
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [progress.remainingTime, progress.isComplete, toast]);
+  }, [progress.remainingTime, progress.isComplete, isLoading, toast]);
+
+  const resetGame = async () => {
+    setIsLoading(true);
+    try {
+      const settings = difficultySettings[progress.currentLevel];
+      const shuffledPairs = await getInitialShuffledPairs(progress.currentLevel);
+
+      setProgress(prev => ({
+        ...prev,
+        remainingTime: settings.timeLimit,
+        matchedPairsInLevel: 0,
+        isComplete: false,
+        unusedPairs: shuffledPairs.slice(settings.displayedPairs)
+      }));
+
+      setCards(generateGameCards(progress.currentLevel, shuffledPairs));
+      setSelectedCards([]);
+      setMatchAnimation(null);
+      setFailAnimation(false);
+    } catch (error) {
+      console.error("Failed to reset game:", error);
+      toast({
+        title: "Error",
+        description: "Failed to reset the game. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Reset game when changing levels
   useEffect(() => {
-    resetGame();
+    if (!isLoading) {
+      resetGame();
+    }
   }, [progress.currentLevel]);
-
-  const resetGame = () => {
-    const settings = difficultySettings[progress.currentLevel];
-    // Get initial shuffled pairs for the level
-    const shuffledPairs = getInitialShuffledPairs(progress.currentLevel);
-    setProgress(prev => ({
-      ...prev,
-      remainingTime: settings.timeLimit,
-      matchedPairsInLevel: 0,
-      isComplete: false,
-      unusedPairs: shuffledPairs.slice(settings.displayedPairs)
-    }));
-
-    // Generate initial cards from the first few pairs
-    setCards(generateGameCards(progress.currentLevel, shuffledPairs));
-    setSelectedCards([]);
-    setMatchAnimation(null);
-    setFailAnimation(false);
-  };
 
   const findCardInColumns = (cardId: string): GameCard | undefined => {
     return [...cards.leftColumn, ...cards.rightColumn].find(c => c.id === cardId);
@@ -102,51 +140,41 @@ export function GameBoard() {
   };
 
   const replaceMatchedCards = useCallback(() => {
-    setCards(currentCards => {
-      // Get all matched pairs that need to be replaced
-      const matchedCards = [...currentCards.leftColumn, ...currentCards.rightColumn].filter(card => card.isMatched);
-      const matchedPairIds = new Set(matchedCards.map(card => card.pairId));
-      const numPairsToReplace = matchedPairIds.size;
+    const matchedCards = [...cards.leftColumn, ...cards.rightColumn].filter(card => card.isMatched);
+    const matchedPairIds = new Set(matchedCards.map(card => card.pairId));
+    const numPairsToReplace = matchedPairIds.size;
 
-      if (numPairsToReplace === 0) return currentCards;
+    if (numPairsToReplace === 0) return;
 
-      // Get the next set of pairs from unusedPairs
-      const nextPairs = progress.unusedPairs.slice(0, numPairsToReplace);
-      console.log("nextPairs", nextPairs);
+    // Get the next set of pairs from unusedPairs
+    const nextPairs = progress.unusedPairs.slice(0, numPairsToReplace);
 
-      // Generate new cards for the matched positions
-      const newCards = generateGameCards(
-        progress.currentLevel,
-        nextPairs,
-        numPairsToReplace
-      );
-      console.log("newCards", newCards);
+    // Generate new cards for the matched positions
+    const newCards = generateGameCards(
+      progress.currentLevel,
+      nextPairs,
+      numPairsToReplace
+    );
 
-      // Update cards with new ones
-      const updatedCards = {
-        leftColumn: currentCards.leftColumn.map(card => 
-          card.isMatched ? newCards.leftColumn.shift() || card : card
-        ),
-        rightColumn: currentCards.rightColumn.map(card =>
-          card.isMatched ? newCards.rightColumn.shift() || card : card
-        )
-      };
+    // Update cards with new ones
+    setCards(current => ({
+      leftColumn: current.leftColumn.map(card => 
+        card.isMatched ? newCards.leftColumn.shift() || card : card
+      ),
+      rightColumn: current.rightColumn.map(card =>
+        card.isMatched ? newCards.rightColumn.shift() || card : card
+      )
+    }));
 
-      // Update unusedPairs
-      setProgress(prev => {
-        console.log("prev.unusedPairs", prev.unusedPairs);
-        return ({
-          ...prev,
-          unusedPairs: prev.unusedPairs.slice(numPairsToReplace)
-        });
-      });
-
-      return updatedCards;
-    });
-  }, [progress.currentLevel, progress.unusedPairs]);
+    // Update unusedPairs
+    setProgress(prev => ({
+      ...prev,
+      unusedPairs: prev.unusedPairs.slice(numPairsToReplace)
+    }));
+  }, [cards, progress.currentLevel, progress.unusedPairs]);
 
   const handleCardClick = (cardId: string) => {
-    if (transitionInProgress || progress.remainingTime <= 0 || progress.isComplete) return;
+    if (transitionInProgress || progress.remainingTime <= 0 || progress.isComplete || isLoading) return;
 
     const card = findCardInColumns(cardId);
     if (!card || card.isMatched || selectedCards.includes(cardId)) return;
@@ -154,7 +182,6 @@ export function GameBoard() {
     const isLeftColumn = isCardInLeftColumn(cardId);
     let newSelected = [...selectedCards];
 
-    // If clicking in same column as an existing selection, replace that selection
     if (selectedCards.length === 1) {
       const existingCard = findCardInColumns(selectedCards[0])!;
       const existingIsLeft = isCardInLeftColumn(existingCard.id);
@@ -176,7 +203,6 @@ export function GameBoard() {
       const secondCard = findCardInColumns(secondId)!;
 
       if (firstCard.pairId === secondCard.pairId) {
-        // Match found
         setTransitionInProgress(true);
         setMatchAnimation(firstCard.pairId);
 
@@ -218,7 +244,6 @@ export function GameBoard() {
         }, 1000);
 
       } else {
-        // No match
         setTransitionInProgress(true);
         setFailAnimation(true);
         setTimeout(() => {
@@ -230,16 +255,27 @@ export function GameBoard() {
     }
   };
 
-  const handleLevelSelect = (level: DifficultyLevel) => {
-    const shuffledPairs = getInitialShuffledPairs(level);
-    setProgress(prev => ({
-      ...prev,
-      currentLevel: level,
-      matchedPairsInLevel: 0,
-      remainingTime: difficultySettings[level].timeLimit,
-      isComplete: false,
-      unusedPairs: shuffledPairs.slice(difficultySettings[level].displayedPairs)
-    }));
+  const handleLevelSelect = async (level: DifficultyLevel) => {
+    setIsLoading(true);
+    try {
+      const shuffledPairs = await getInitialShuffledPairs(level);
+      setProgress(prev => ({
+        ...prev,
+        currentLevel: level,
+        matchedPairsInLevel: 0,
+        remainingTime: difficultySettings[level].timeLimit,
+        isComplete: false,
+        unusedPairs: shuffledPairs.slice(difficultySettings[level].displayedPairs)
+      }));
+    } catch (error) {
+      console.error("Failed to change level:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load level data. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const formatTime = (seconds: number): string => {
@@ -247,6 +283,10 @@ export function GameBoard() {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -291,7 +331,7 @@ export function GameBoard() {
         </div>
       </div>
       <div className="flex justify-center gap-4">
-        <Button onClick={resetGame}>Reset Level</Button>
+        <Button onClick={() => resetGame()}>Reset Level</Button>
       </div>
     </div>
   );
