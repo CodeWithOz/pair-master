@@ -1,4 +1,9 @@
-import { GameBoard } from "@/components/game/GameBoard";
+import { GameBoard } from "./components/game/GameBoard";
+import { initializeDatabase } from "./lib/db";
+import { wordPairs } from "./lib/game-data";
+
+// Initialize database with default words
+initializeDatabase(wordPairs);
 
 function App() {
   return (
