@@ -22,7 +22,6 @@ interface ColumnCards {
 export function GameBoard() {
   const [cards, setCards] = useState<ColumnCards>({ leftColumn: [], rightColumn: [] });
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
-  const [availablePairs, setAvailablePairs] = useState<WordPair[]>([]);
   const [progress, setProgress] = useState<GameProgress>({
     currentLevel: 1 as DifficultyLevel,
     highestUnlockedLevel: 1 as DifficultyLevel,
@@ -103,25 +102,24 @@ export function GameBoard() {
   };
 
   const replaceMatchedCards = useCallback(() => {
-    // Get the next available pairs that haven't been used yet
-    const matchedPairIds = new Set([...cards.leftColumn, ...cards.rightColumn]
-      .filter(card => card.isMatched)
-      .map(card => card.pairId));
+    // Get all matched pairs that need to be replaced
+    const matchedCards = [...cards.leftColumn, ...cards.rightColumn].filter(card => card.isMatched);
+    const matchedPairIds = new Set(matchedCards.map(card => card.pairId));
+    const numPairsToReplace = matchedPairIds.size;
 
-    // Remove matched pairs from unusedPairs
-    setProgress(prev => ({
-      ...prev,
-      unusedPairs: prev.unusedPairs.filter(pair => !matchedPairIds.has(pair.id))
-    }));
+    if (numPairsToReplace === 0) return;
 
-    // Generate new cards using the next available pairs
+    // Get the next set of pairs from unusedPairs
+    const nextPairs = progress.unusedPairs.slice(0, numPairsToReplace);
+
+    // Generate new cards for the matched positions
     const newCards = generateGameCards(
       progress.currentLevel,
-      progress.unusedPairs,
-      matchedPairIds.size
+      nextPairs,
+      numPairsToReplace
     );
 
-    // Replace matched cards with new ones
+    // Update the game state with new cards
     setCards(current => ({
       leftColumn: current.leftColumn.map(card => 
         card.isMatched ? newCards.leftColumn.shift() || card : card
@@ -130,7 +128,13 @@ export function GameBoard() {
         card.isMatched ? newCards.rightColumn.shift() || card : card
       )
     }));
-  }, [progress.currentLevel, progress.unusedPairs]);
+
+    // Remove used pairs from unusedPairs
+    setProgress(prev => ({
+      ...prev,
+      unusedPairs: prev.unusedPairs.slice(numPairsToReplace)
+    }));
+  }, [cards, progress.currentLevel, progress.unusedPairs]);
 
   const handleCardClick = (cardId: string) => {
     if (transitionInProgress || progress.remainingTime <= 0 || progress.isComplete) return;
@@ -182,6 +186,11 @@ export function GameBoard() {
           const settings = difficultySettings[progress.currentLevel];
           const levelComplete = newMatchedPairs >= settings.requiredPairs;
 
+          // Replace matched cards before updating progress
+          if (!levelComplete) {
+            replaceMatchedCards();
+          }
+
           setProgress(prev => ({
             ...prev,
             matchedPairsInLevel: newMatchedPairs,
@@ -197,11 +206,6 @@ export function GameBoard() {
 
           setSelectedCards([]);
           setTransitionInProgress(false);
-
-          // Replace matched cards if there are still pairs to match
-          if (!levelComplete) {
-            replaceMatchedCards();
-          }
         }, 1000);
 
       } else {
