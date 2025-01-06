@@ -120,13 +120,14 @@ export function canUnlockNextLevel(progress: GameProgress): boolean {
   );
 }
 
-export async function getWordPairsForLevel(level: DifficultyLevel): Promise<WordPair[]> {
-  const db = (await import('./db')).db;
-  return await db.wordPairs.where('difficulty').equals(level).toArray();
+// Return the word pairs for a specific difficulty level
+export function getWordPairsForLevel(level: DifficultyLevel): WordPair[] {
+  return wordPairs.filter(pair => pair.difficulty === level);
 }
 
-export async function getInitialShuffledPairs(level: DifficultyLevel): Promise<WordPair[]> {
-  const levelPairs = await getWordPairsForLevel(level);
+// Get initially shuffled pairs for a level
+export function getInitialShuffledPairs(level: DifficultyLevel): WordPair[] {
+  const levelPairs = getWordPairsForLevel(level);
   return [...levelPairs].sort(() => Math.random() - 0.5);
 }
 

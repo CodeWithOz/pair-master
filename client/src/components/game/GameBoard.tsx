@@ -83,7 +83,7 @@ export function GameBoard() {
       remainingTime: settings.timeLimit,
       matchedPairsInLevel: 0,
       isComplete: false,
-      unusedPairs: shuffledPairs
+      unusedPairs: shuffledPairs.slice(settings.displayedPairs)
     }));
 
     // Generate initial cards from the first few pairs
@@ -231,13 +231,14 @@ export function GameBoard() {
   };
 
   const handleLevelSelect = (level: DifficultyLevel) => {
+    const shuffledPairs = getInitialShuffledPairs(level);
     setProgress(prev => ({
       ...prev,
       currentLevel: level,
       matchedPairsInLevel: 0,
       remainingTime: difficultySettings[level].timeLimit,
       isComplete: false,
-      unusedPairs: getInitialShuffledPairs(level).slice(difficultySettings[level].displayedPairs)
+      unusedPairs: shuffledPairs.slice(difficultySettings[level].displayedPairs)
     }));
   };
 
