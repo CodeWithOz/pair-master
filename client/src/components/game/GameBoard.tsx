@@ -104,10 +104,17 @@ export function GameBoard() {
   const replaceMatchedCards = useCallback(() => {
     // Get all matched pairs that need to be replaced
     const matchedCards = [...cards.leftColumn, ...cards.rightColumn].filter(card => card.isMatched);
+    console.log("cards", [...cards.leftColumn, ...cards.rightColumn]);
     const matchedPairIds = new Set(matchedCards.map(card => card.pairId));
     const numPairsToReplace = matchedPairIds.size;
 
-    if (numPairsToReplace === 0) return;
+    // if (numPairsToReplace === 0) return;
+    if (numPairsToReplace === 0) {
+      console.log("********* No matched pairs to replace *********");
+      return;
+    } else {
+       console.log("+++++++++++++ found pairs to replace +++++++++++++");
+    }
 
     // Get the next set of pairs from unusedPairs
     const nextPairs = progress.unusedPairs.slice(0, numPairsToReplace);
