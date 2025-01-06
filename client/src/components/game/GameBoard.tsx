@@ -216,9 +216,12 @@ export function GameBoard() {
           }
         }, 1000);
       } else {
-        // Failed match - show animation briefly
+        // Clear selections before the animation starts
+        setSelectedCards([]);
+
+        // Failed match - show animation
         setTimeout(() => {
-          // Remove cards from matching state
+          // Remove cards from matching state after animation
           setMatchingCards(prev => {
             const next = new Set(prev);
             next.delete(firstId);
@@ -227,9 +230,6 @@ export function GameBoard() {
           });
         }, 1000);
       }
-
-      // Clear selections after attempting a match
-      setSelectedCards([]);
     }
   };
 
@@ -271,8 +271,8 @@ export function GameBoard() {
               word={card.word}
               isMatched={card.isMatched}
               isSelected={selectedCards.includes(card.id)}
-              isMatchAnimation={matchingCards.has(card.id) && !selectedCards.includes(card.id)}
-              isFailAnimation={matchingCards.has(card.id) && selectedCards.length === 0}
+              isMatchAnimation={matchingCards.has(card.id) && card.isMatched}
+              isFailAnimation={matchingCards.has(card.id) && !card.isMatched}
               onClick={() => handleCardClick(card.id)}
             />
           ))}
@@ -284,8 +284,8 @@ export function GameBoard() {
               word={card.word}
               isMatched={card.isMatched}
               isSelected={selectedCards.includes(card.id)}
-              isMatchAnimation={matchingCards.has(card.id) && !selectedCards.includes(card.id)}
-              isFailAnimation={matchingCards.has(card.id) && selectedCards.length === 0}
+              isMatchAnimation={matchingCards.has(card.id) && card.isMatched}
+              isFailAnimation={matchingCards.has(card.id) && !card.isMatched}
               onClick={() => handleCardClick(card.id)}
             />
           ))}
