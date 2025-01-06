@@ -136,8 +136,10 @@ export function generateGameCards(level: DifficultyLevel, excludePairIds: number
   const rightCards: GameCard[] = [];
 
   selectedPairs.forEach(pair => {
+    // Add timestamp to ensure unique IDs even for the same pair
+    const timestamp = Date.now();
     leftCards.push({
-      id: `en-${pair.id}`,
+      id: `en-${pair.id}-${timestamp}`,
       word: pair.english,
       pairId: pair.id,
       language: 'english',
@@ -145,7 +147,7 @@ export function generateGameCards(level: DifficultyLevel, excludePairIds: number
     });
 
     rightCards.push({
-      id: `de-${pair.id}`,
+      id: `de-${pair.id}-${timestamp}`,
       word: pair.german,
       pairId: pair.id,
       language: 'german',
