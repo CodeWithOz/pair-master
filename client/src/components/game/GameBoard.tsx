@@ -52,20 +52,18 @@ export function GameBoard() {
           }
           return { ...prev, remainingTime: newTime };
         });
+
+        // Schedule next tick if time remaining and not complete
+        if (progress.remainingTime > 1 && !progress.isComplete) {
+          runTimer();
+        }
       }, 1000);
     };
 
     runTimer(); // Start the timer
 
-    const intervalId = setInterval(() => {
-      if (progress.remainingTime > 0 && !progress.isComplete) {
-        runTimer();
-      }
-    }, 1000);
-
     return () => {
       clearTimeout(timeoutId);
-      clearInterval(intervalId);
     };
   }, [progress.remainingTime, progress.isComplete, toast]);
 
