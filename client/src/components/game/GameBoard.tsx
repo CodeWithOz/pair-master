@@ -108,25 +108,13 @@ export function GameBoard() {
       const matchedPairIds = new Set(matchedCards.map(card => card.pairId));
       const numPairsToReplace = matchedPairIds.size;
 
-    // if (numPairsToReplace === 0) return;
-    if (numPairsToReplace === 0) {
-      console.log("********* No matched pairs to replace *********");
-      return;
-    } else {
-       console.log("+++++++++++++ found pairs to replace +++++++++++++");
-    }
+      if (numPairsToReplace === 0) {
+        console.log("********* No matched pairs to replace *********");
+      } else {
+         console.log("+++++++++++++ found pairs to replace +++++++++++++");
+      }
 
-    // Get the next set of pairs from unusedPairs
-    const nextPairs = progress.unusedPairs.slice(0, numPairsToReplace);
-
-    // Generate new cards for the matched positions
-    const newCards = generateGameCards(
-      progress.currentLevel,
-      nextPairs,
-      numPairsToReplace
-    );
-
-    if (numPairsToReplace === 0) return currentCards;
+      if (numPairsToReplace === 0) return currentCards;
 
       // Get the next set of pairs from unusedPairs
       const nextPairs = progress.unusedPairs.slice(0, numPairsToReplace);
