@@ -86,24 +86,59 @@ export function GameBoard() {
   };
 
   const replaceMatchedCards = useCallback(() => {
+    // Get matched pair IDs from current set of cards
     const allMatchedPairIds = [...cards.leftColumn, ...cards.rightColumn]
       .filter(card => card.isMatched)
       .map(card => card.pairId);
 
+    // Update used pairs
     setUsedPairIds(prev => [...prev, ...allMatchedPairIds]);
 
-    // Generate new cards excluding used pairs
+    // Get new cards excluding all used pairs
     const newCards = generateGameCards(progress.currentLevel, usedPairIds);
 
-    // Replace matched cards with new ones
-    setCards(current => ({
-      leftColumn: current.leftColumn.map(card => 
-        card.isMatched ? newCards.leftColumn.find(c => !current.leftColumn.some(existing => existing.pairId === c.pairId)) || card : card
-      ),
-      rightColumn: current.rightColumn.map(card =>
-        card.isMatched ? newCards.rightColumn.find(c => !current.rightColumn.some(existing => existing.pairId === c.pairId)) || card : card
-      )
-    }));
+    // Create a map to track used new cards
+    const usedNewCards = new Set<string>();
+
+    // Replace matched cards with new ones, ensuring no duplicates
+    setCards(current => {
+      const updatedLeft = current.leftColumn.map(card => {
+        if (!card.isMatched) return card;
+
+        // Find an unused new card
+        const newCard = newCards.leftColumn.find(c => 
+          !usedNewCards.has(c.id) && 
+          !current.leftColumn.some(existing => !existing.isMatched && existing.pairId === c.pairId)
+        );
+
+        if (newCard) {
+          usedNewCards.add(newCard.id);
+          return newCard;
+        }
+        return card;
+      });
+
+      const updatedRight = current.rightColumn.map(card => {
+        if (!card.isMatched) return card;
+
+        // Find an unused new card
+        const newCard = newCards.rightColumn.find(c => 
+          !usedNewCards.has(c.id) && 
+          !current.rightColumn.some(existing => !existing.isMatched && existing.pairId === c.pairId)
+        );
+
+        if (newCard) {
+          usedNewCards.add(newCard.id);
+          return newCard;
+        }
+        return card;
+      });
+
+      return {
+        leftColumn: updatedLeft,
+        rightColumn: updatedRight
+      };
+    });
   }, [progress.currentLevel, usedPairIds]);
 
   const handleCardClick = (cardId: string) => {
@@ -136,10 +171,10 @@ export function GameBoard() {
       const firstCard = findCardInColumns(firstId)!;
       const secondCard = findCardInColumns(secondId)!;
 
-      if (firstCard.pairId === secondCard.pairId) {
-        // Mark both cards as in matching state
-        setMatchingCards(prev => new Set([...prev, firstId, secondId]));
+      // Mark both cards as in matching state
+      setMatchingCards(prev => new Set([...prev, firstId, secondId]));
 
+      if (firstCard.pairId === secondCard.pairId) {
         setTimeout(() => {
           setCards(current => ({
             leftColumn: current.leftColumn.map(card =>
@@ -181,9 +216,9 @@ export function GameBoard() {
           }
         }, 1000);
       } else {
-        // No match - show fail animation briefly
-        setMatchingCards(prev => new Set([...prev, firstId, secondId]));
+        // Failed match - show animation briefly
         setTimeout(() => {
+          // Remove cards from matching state
           setMatchingCards(prev => {
             const next = new Set(prev);
             next.delete(firstId);
@@ -236,8 +271,8 @@ export function GameBoard() {
               word={card.word}
               isMatched={card.isMatched}
               isSelected={selectedCards.includes(card.id)}
-              isMatchAnimation={matchingCards.has(card.id)}
-              isFailAnimation={matchingCards.has(card.id) && !card.isMatched}
+              isMatchAnimation={matchingCards.has(card.id) && !selectedCards.includes(card.id)}
+              isFailAnimation={matchingCards.has(card.id) && selectedCards.length === 0}
               onClick={() => handleCardClick(card.id)}
             />
           ))}
@@ -249,8 +284,8 @@ export function GameBoard() {
               word={card.word}
               isMatched={card.isMatched}
               isSelected={selectedCards.includes(card.id)}
-              isMatchAnimation={matchingCards.has(card.id)}
-              isFailAnimation={matchingCards.has(card.id) && !card.isMatched}
+              isMatchAnimation={matchingCards.has(card.id) && !selectedCards.includes(card.id)}
+              isFailAnimation={matchingCards.has(card.id) && selectedCards.length === 0}
               onClick={() => handleCardClick(card.id)}
             />
           ))}
