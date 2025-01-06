@@ -28,7 +28,7 @@ export function GameBoard() {
     matchedPairsInLevel: 0,
     remainingTime: difficultySettings[1].timeLimit,
     isComplete: false,
-    unusedPairs: getInitialShuffledPairs(1) // Initialize with shuffled pairs for level 1
+    unusedPairs: getInitialShuffledPairs(1).slice(difficultySettings[1].displayedPairs) // Initialize excluding displayed pairs
   });
   const [matchAnimation, setMatchAnimation] = useState<number | null>(null);
   const [failAnimation, setFailAnimation] = useState<boolean>(false);
@@ -238,7 +238,7 @@ export function GameBoard() {
       matchedPairsInLevel: 0,
       remainingTime: difficultySettings[level].timeLimit,
       isComplete: false,
-      unusedPairs: getInitialShuffledPairs(level)
+      unusedPairs: getInitialShuffledPairs(level).slice(difficultySettings[level].displayedPairs)
     }));
   };
 
