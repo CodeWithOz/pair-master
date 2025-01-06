@@ -210,7 +210,7 @@ export function GameBoard() {
               matchedPairsInLevel: newMatchedPairs,
               isComplete: levelComplete
             })
-              ? Math.min((prev.currentLevel + 1) as DifficultyLevel, 3 as DifficultyLevel)
+              ? Math.min((prev.currentLevel + 1), 3) as DifficultyLevel
               : prev.highestUnlockedLevel
           }));
 
