@@ -103,6 +103,7 @@ export interface GameProgress {
   matchedPairsInLevel: number;
   remainingTime: number;
   isComplete: boolean;
+  unusedPairs: WordPair[]; // Added state to track unused pairs
 }
 
 export function isLevelUnlocked(progress: GameProgress, level: DifficultyLevel): boolean {
@@ -123,14 +124,19 @@ export function getWordPairsForLevel(level: DifficultyLevel): WordPair[] {
   return wordPairs.filter(pair => pair.difficulty === level);
 }
 
-export function generateGameCards(level: DifficultyLevel, excludePairIds: number[] = []): { leftColumn: GameCard[], rightColumn: GameCard[] } {
-  const levelWordPairs = getWordPairsForLevel(level)
-    .filter(pair => !excludePairIds.includes(pair.id));
+export function getInitialShuffledPairs(level: DifficultyLevel): WordPair[] {
+  const levelPairs = getWordPairsForLevel(level);
+  // Shuffle only once when starting the level
+  return [...levelPairs].sort(() => Math.random() - 0.5);
+}
 
-  // Get random pairs up to displayedPairs
-  const selectedPairs = levelWordPairs
-    .sort(() => Math.random() - 0.5)
-    .slice(0, difficultySettings[level].displayedPairs);
+export function generateGameCards(
+  level: DifficultyLevel, 
+  availablePairs: WordPair[],
+  displayCount: number = difficultySettings[level].displayedPairs
+): { leftColumn: GameCard[], rightColumn: GameCard[] } {
+  // Take the first n pairs sequentially from available pairs
+  const selectedPairs = availablePairs.slice(0, displayCount);
 
   const leftCards: GameCard[] = [];
   const rightCards: GameCard[] = [];
@@ -155,7 +161,7 @@ export function generateGameCards(level: DifficultyLevel, excludePairIds: number
     });
   });
 
-  // Shuffle each column independently
+  // Shuffle only the display order, not the pair selection
   for (let i = leftCards.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [leftCards[i], leftCards[j]] = [leftCards[j], leftCards[i]];

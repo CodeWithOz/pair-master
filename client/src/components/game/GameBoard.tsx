@@ -3,9 +3,11 @@ import { Card } from "./Card";
 import { Button } from "@/components/ui/button";
 import { 
   generateGameCards, 
+  getInitialShuffledPairs,
   type GameCard, 
   type GameProgress,
   type DifficultyLevel,
+  type WordPair,
   canUnlockNextLevel,
   difficultySettings
 } from "@/lib/game-data";
@@ -20,6 +22,7 @@ interface ColumnCards {
 export function GameBoard() {
   const [cards, setCards] = useState<ColumnCards>({ leftColumn: [], rightColumn: [] });
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
+  const [availablePairs, setAvailablePairs] = useState<WordPair[]>([]);
   const [progress, setProgress] = useState<GameProgress>({
     currentLevel: 1 as DifficultyLevel,
     highestUnlockedLevel: 1 as DifficultyLevel,
@@ -30,7 +33,6 @@ export function GameBoard() {
   const [matchAnimation, setMatchAnimation] = useState<number | null>(null);
   const [failAnimation, setFailAnimation] = useState<boolean>(false);
   const [transitionInProgress, setTransitionInProgress] = useState(false);
-  const [usedPairIds, setUsedPairIds] = useState<number[]>([]);
   const { toast } = useToast();
 
   // Timer effect
@@ -74,11 +76,14 @@ export function GameBoard() {
 
   const resetGame = () => {
     const settings = difficultySettings[progress.currentLevel];
-    setCards(generateGameCards(progress.currentLevel));
+    // Get initial shuffled pairs for the level
+    const shuffledPairs = getInitialShuffledPairs(progress.currentLevel);
+    setAvailablePairs(shuffledPairs);
+    // Generate initial cards from the first few pairs
+    setCards(generateGameCards(progress.currentLevel, shuffledPairs));
     setSelectedCards([]);
     setMatchAnimation(null);
     setFailAnimation(false);
-    setUsedPairIds([]);
     setProgress(prev => ({
       ...prev,
       remainingTime: settings.timeLimit,
@@ -96,25 +101,32 @@ export function GameBoard() {
   };
 
   const replaceMatchedCards = useCallback(() => {
-    const allMatchedPairIds = [...cards.leftColumn, ...cards.rightColumn]
+    // Get the next available pairs that haven't been used yet
+    const matchedPairIds = new Set([...cards.leftColumn, ...cards.rightColumn]
       .filter(card => card.isMatched)
-      .map(card => card.pairId);
+      .map(card => card.pairId));
 
-    setUsedPairIds(prev => [...prev, ...allMatchedPairIds]);
+    // Remove matched pairs from available pairs
+    const remainingPairs = availablePairs.filter(pair => !matchedPairIds.has(pair.id));
+    setAvailablePairs(remainingPairs);
 
-    // Generate new cards excluding used pairs
-    const newCards = generateGameCards(progress.currentLevel, usedPairIds);
+    // Generate new cards using the next available pairs in sequence
+    const newCards = generateGameCards(
+      progress.currentLevel, 
+      remainingPairs,
+      matchedPairIds.size
+    );
 
     // Replace matched cards with new ones
     setCards(current => ({
       leftColumn: current.leftColumn.map(card => 
-        card.isMatched ? newCards.leftColumn.find(c => !current.leftColumn.some(existing => existing.pairId === c.pairId)) || card : card
+        card.isMatched ? newCards.leftColumn.shift() || card : card
       ),
       rightColumn: current.rightColumn.map(card =>
-        card.isMatched ? newCards.rightColumn.find(c => !current.rightColumn.some(existing => existing.pairId === c.pairId)) || card : card
+        card.isMatched ? newCards.rightColumn.shift() || card : card
       )
     }));
-  }, [progress.currentLevel, usedPairIds]);
+  }, [progress.currentLevel, availablePairs]);
 
   const handleCardClick = (cardId: string) => {
     if (transitionInProgress || progress.remainingTime <= 0 || progress.isComplete) return;
