@@ -28,7 +28,7 @@ export function GameBoard() {
     matchedPairsInLevel: 0,
     remainingTime: difficultySettings[1].timeLimit,
     isComplete: false,
-    unusedPairs: getInitialShuffledPairs(1).slice(difficultySettings[1].displayedPairs) // Initialize excluding displayed pairs
+    unusedPairs: [] // Initialize as empty array, will be populated in useEffect
   });
   const [matchAnimation, setMatchAnimation] = useState<number | null>(null);
   const [failAnimation, setFailAnimation] = useState<boolean>(false);
@@ -69,29 +69,70 @@ export function GameBoard() {
     };
   }, [progress.remainingTime, progress.isComplete, toast]);
 
-  // Reset game when changing levels
+  // Initialize game data
   useEffect(() => {
-    resetGame();
+    const initializeGame = async () => {
+      try {
+        const shuffledPairs = await getInitialShuffledPairs(progress.currentLevel);
+        const settings = difficultySettings[progress.currentLevel];
+        const displayCount = settings.displayedPairs;
+
+        // Split pairs into displayed and unused
+        const displayedPairs = shuffledPairs.slice(0, displayCount);
+        const remainingPairs = shuffledPairs.slice(displayCount);
+
+        setProgress(prev => ({
+          ...prev,
+          unusedPairs: remainingPairs
+        }));
+
+        // Generate initial cards from the first few pairs
+        setCards(generateGameCards(progress.currentLevel, displayedPairs));
+      } catch (error) {
+        console.error("Error initializing game:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load word pairs. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    initializeGame();
   }, [progress.currentLevel]);
 
-  const resetGame = () => {
-    const settings = difficultySettings[progress.currentLevel];
-    // Get initial shuffled pairs for the level
-    const shuffledPairs = getInitialShuffledPairs(progress.currentLevel);
-    setProgress(prev => ({
-      ...prev,
-      remainingTime: settings.timeLimit,
-      matchedPairsInLevel: 0,
-      isComplete: false,
-      unusedPairs: shuffledPairs
-    }));
+  const resetGame = useCallback(async () => {
+    try {
+      const settings = difficultySettings[progress.currentLevel];
+      const shuffledPairs = await getInitialShuffledPairs(progress.currentLevel);
+      const displayCount = settings.displayedPairs;
 
-    // Generate initial cards from the first few pairs
-    setCards(generateGameCards(progress.currentLevel, shuffledPairs));
-    setSelectedCards([]);
-    setMatchAnimation(null);
-    setFailAnimation(false);
-  };
+      // Split pairs into displayed and unused
+      const displayedPairs = shuffledPairs.slice(0, displayCount);
+      const remainingPairs = shuffledPairs.slice(displayCount);
+
+      setProgress(prev => ({
+        ...prev,
+        remainingTime: settings.timeLimit,
+        matchedPairsInLevel: 0,
+        isComplete: false,
+        unusedPairs: remainingPairs
+      }));
+
+      // Generate initial cards from the first few pairs
+      setCards(generateGameCards(progress.currentLevel, displayedPairs));
+      setSelectedCards([]);
+      setMatchAnimation(null);
+      setFailAnimation(false);
+    } catch (error) {
+      console.error("Error resetting game:", error);
+      toast({
+        title: "Error",
+        description: "Failed to reset the game. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [progress.currentLevel, toast]);
 
   const findCardInColumns = (cardId: string): GameCard | undefined => {
     return [...cards.leftColumn, ...cards.rightColumn].find(c => c.id === cardId);
@@ -112,7 +153,6 @@ export function GameBoard() {
 
       // Get the next set of pairs from unusedPairs
       const nextPairs = progress.unusedPairs.slice(0, numPairsToReplace);
-      console.log("nextPairs", nextPairs);
 
       // Generate new cards for the matched positions
       const newCards = generateGameCards(
@@ -120,7 +160,6 @@ export function GameBoard() {
         nextPairs,
         numPairsToReplace
       );
-      console.log("newCards", newCards);
 
       // Update cards with new ones
       const updatedCards = {
@@ -133,13 +172,10 @@ export function GameBoard() {
       };
 
       // Update unusedPairs
-      setProgress(prev => {
-        console.log("prev.unusedPairs", prev.unusedPairs);
-        return ({
-          ...prev,
-          unusedPairs: prev.unusedPairs.slice(numPairsToReplace)
-        });
-      });
+      setProgress(prev => ({
+        ...prev,
+        unusedPairs: prev.unusedPairs.slice(numPairsToReplace)
+      }));
 
       return updatedCards;
     });
@@ -237,7 +273,7 @@ export function GameBoard() {
       matchedPairsInLevel: 0,
       remainingTime: difficultySettings[level].timeLimit,
       isComplete: false,
-      unusedPairs: getInitialShuffledPairs(level).slice(difficultySettings[level].displayedPairs)
+      unusedPairs: [] // Reset unused pairs, will be populated by useEffect
     }));
   };
 
@@ -290,7 +326,7 @@ export function GameBoard() {
         </div>
       </div>
       <div className="flex justify-center gap-4">
-        <Button onClick={resetGame}>Reset Level</Button>
+        <Button onClick={() => resetGame()}>Reset Level</Button>
       </div>
     </div>
   );
