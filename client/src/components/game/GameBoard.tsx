@@ -50,7 +50,6 @@ export function GameBoard() {
             });
             return { ...prev, remainingTime: 0 };
           }
-          runTimer(); // Schedule next update before state change
           return { ...prev, remainingTime: newTime };
         });
       }, 1000);
@@ -58,10 +57,15 @@ export function GameBoard() {
 
     runTimer(); // Start the timer
 
-    return () => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+    const intervalId = setInterval(() => {
+      if (progress.remainingTime > 0 && !progress.isComplete) {
+        runTimer();
       }
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
     };
   }, [progress.remainingTime, progress.isComplete, toast]);
 
