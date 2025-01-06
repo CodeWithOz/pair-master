@@ -28,7 +28,8 @@ export function GameBoard() {
     highestUnlockedLevel: 1 as DifficultyLevel,
     matchedPairsInLevel: 0,
     remainingTime: difficultySettings[1].timeLimit,
-    isComplete: false
+    isComplete: false,
+    unusedPairs: getInitialShuffledPairs(1) // Initialize with shuffled pairs for level 1
   });
   const [matchAnimation, setMatchAnimation] = useState<number | null>(null);
   const [failAnimation, setFailAnimation] = useState<boolean>(false);
@@ -78,18 +79,19 @@ export function GameBoard() {
     const settings = difficultySettings[progress.currentLevel];
     // Get initial shuffled pairs for the level
     const shuffledPairs = getInitialShuffledPairs(progress.currentLevel);
-    setAvailablePairs(shuffledPairs);
+    setProgress(prev => ({
+      ...prev,
+      remainingTime: settings.timeLimit,
+      matchedPairsInLevel: 0,
+      isComplete: false,
+      unusedPairs: shuffledPairs
+    }));
+
     // Generate initial cards from the first few pairs
     setCards(generateGameCards(progress.currentLevel, shuffledPairs));
     setSelectedCards([]);
     setMatchAnimation(null);
     setFailAnimation(false);
-    setProgress(prev => ({
-      ...prev,
-      remainingTime: settings.timeLimit,
-      matchedPairsInLevel: 0,
-      isComplete: false
-    }));
   };
 
   const findCardInColumns = (cardId: string): GameCard | undefined => {
@@ -106,14 +108,16 @@ export function GameBoard() {
       .filter(card => card.isMatched)
       .map(card => card.pairId));
 
-    // Remove matched pairs from available pairs
-    const remainingPairs = availablePairs.filter(pair => !matchedPairIds.has(pair.id));
-    setAvailablePairs(remainingPairs);
+    // Remove matched pairs from unusedPairs
+    setProgress(prev => ({
+      ...prev,
+      unusedPairs: prev.unusedPairs.filter(pair => !matchedPairIds.has(pair.id))
+    }));
 
-    // Generate new cards using the next available pairs in sequence
+    // Generate new cards using the next available pairs
     const newCards = generateGameCards(
-      progress.currentLevel, 
-      remainingPairs,
+      progress.currentLevel,
+      progress.unusedPairs,
       matchedPairIds.size
     );
 
@@ -126,7 +130,7 @@ export function GameBoard() {
         card.isMatched ? newCards.rightColumn.shift() || card : card
       )
     }));
-  }, [progress.currentLevel, availablePairs]);
+  }, [progress.currentLevel, progress.unusedPairs]);
 
   const handleCardClick = (cardId: string) => {
     if (transitionInProgress || progress.remainingTime <= 0 || progress.isComplete) return;
@@ -219,7 +223,8 @@ export function GameBoard() {
       currentLevel: level,
       matchedPairsInLevel: 0,
       remainingTime: difficultySettings[level].timeLimit,
-      isComplete: false
+      isComplete: false,
+      unusedPairs: getInitialShuffledPairs(level)
     }));
   };
 
