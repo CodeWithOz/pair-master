@@ -127,9 +127,8 @@ export function generateGameCards(level: DifficultyLevel, excludePairIds: number
   const levelWordPairs = getWordPairsForLevel(level)
     .filter(pair => !excludePairIds.includes(pair.id));
 
-  // Get random pairs up to displayedPairs
+  // Get next pairs up to displayedPairs, no randomization
   const selectedPairs = levelWordPairs
-    .sort(() => Math.random() - 0.5)
     .slice(0, difficultySettings[level].displayedPairs);
 
   const leftCards: GameCard[] = [];
@@ -155,7 +154,7 @@ export function generateGameCards(level: DifficultyLevel, excludePairIds: number
     });
   });
 
-  // Shuffle each column independently
+  // Shuffle each column independently to maintain gameplay challenge
   for (let i = leftCards.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [leftCards[i], leftCards[j]] = [leftCards[j], leftCards[i]];
