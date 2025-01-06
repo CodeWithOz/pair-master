@@ -37,21 +37,32 @@ export function GameBoard() {
   useEffect(() => {
     if (progress.remainingTime <= 0 || progress.isComplete) return;
 
-    const timer = setInterval(() => {
-      setProgress(prev => {
-        const newTime = prev.remainingTime - 1;
-        if (newTime <= 0) {
-          toast({
-            title: "Time's Up!",
-            description: "Try again or select a different level.",
-          });
-          return { ...prev, remainingTime: 0 };
-        }
-        return { ...prev, remainingTime: newTime };
-      });
-    }, 1000);
+    let timeoutId: NodeJS.Timeout;
 
-    return () => clearInterval(timer);
+    const runTimer = () => {
+      timeoutId = setTimeout(() => {
+        setProgress(prev => {
+          const newTime = prev.remainingTime - 1;
+          if (newTime <= 0) {
+            toast({
+              title: "Time's Up!",
+              description: "Try again or select a different level.",
+            });
+            return { ...prev, remainingTime: 0 };
+          }
+          runTimer(); // Schedule next update before state change
+          return { ...prev, remainingTime: newTime };
+        });
+      }, 1000);
+    };
+
+    runTimer(); // Start the timer
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [progress.remainingTime, progress.isComplete, toast]);
 
   // Reset game when changing levels
