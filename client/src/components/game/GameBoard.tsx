@@ -174,7 +174,11 @@ export function GameBoard() {
       // Mark both cards as in matching state
       setMatchingCards(prev => new Set([...prev, firstId, secondId]));
 
+      // Clear selections before processing the match
+      setSelectedCards([]);
+
       if (firstCard.pairId === secondCard.pairId) {
+        // Successful match
         setTimeout(() => {
           setCards(current => ({
             leftColumn: current.leftColumn.map(card =>
@@ -216,9 +220,6 @@ export function GameBoard() {
           }
         }, 1000);
       } else {
-        // Clear selections before the animation starts
-        setSelectedCards([]);
-
         // Failed match - show animation
         setTimeout(() => {
           // Remove cards from matching state after animation
