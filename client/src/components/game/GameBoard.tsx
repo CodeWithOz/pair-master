@@ -316,7 +316,7 @@ export function GameBoard() {
           Time: {formatTime(progress.remainingTime)}
         </div>
         <div className="text-sm text-gray-600">
-          Matches: {progress.matchedPairsInLevel} /{" "}
+          Matches: {progress.matchedPairsInLevel} /
           {difficultySettings[progress.currentLevel].requiredPairs}
         </div>
       </div>
