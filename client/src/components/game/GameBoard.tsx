@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card } from "./Card";
 import { Button } from "@/components/ui/button";
-import { 
-  generateGameCards, 
+import {
+  generateGameCards,
   getInitialShuffledPairs,
-  type GameCard, 
+  type GameCard,
   type GameProgress,
   type DifficultyLevel,
   type WordPair,
   canUnlockNextLevel,
-  difficultySettings
+  difficultySettings,
 } from "@/lib/game-data";
 import { useToast } from "@/hooks/use-toast";
 import { DifficultySelector } from "./DifficultySelector";
@@ -20,7 +20,10 @@ interface ColumnCards {
 }
 
 export function GameBoard() {
-  const [cards, setCards] = useState<ColumnCards>({ leftColumn: [], rightColumn: [] });
+  const [cards, setCards] = useState<ColumnCards>({
+    leftColumn: [],
+    rightColumn: [],
+  });
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   const [progress, setProgress] = useState<GameProgress>({
     currentLevel: 1 as DifficultyLevel,
@@ -28,7 +31,7 @@ export function GameBoard() {
     matchedPairsInLevel: 0,
     remainingTime: difficultySettings[1].timeLimit,
     isComplete: false,
-    unusedPairs: [] // Initialize as empty array, will be populated in useEffect
+    unusedPairs: [], // Initialize as empty array, will be populated in useEffect
   });
   const [matchAnimation, setMatchAnimation] = useState<number | null>(null);
   const [failAnimation, setFailAnimation] = useState<boolean>(false);
@@ -43,7 +46,7 @@ export function GameBoard() {
 
     const runTimer = () => {
       timeoutId = setTimeout(() => {
-        setProgress(prev => {
+        setProgress((prev) => {
           const newTime = prev.remainingTime - 1;
           if (newTime <= 0) {
             toast({
@@ -73,7 +76,9 @@ export function GameBoard() {
   useEffect(() => {
     const initializeGame = async () => {
       try {
-        const shuffledPairs = await getInitialShuffledPairs(progress.currentLevel);
+        const shuffledPairs = await getInitialShuffledPairs(
+          progress.currentLevel,
+        );
         const settings = difficultySettings[progress.currentLevel];
         const displayCount = settings.displayedPairs;
 
@@ -81,9 +86,9 @@ export function GameBoard() {
         const displayedPairs = shuffledPairs.slice(0, displayCount);
         const remainingPairs = shuffledPairs.slice(displayCount);
 
-        setProgress(prev => ({
+        setProgress((prev) => ({
           ...prev,
-          unusedPairs: remainingPairs
+          unusedPairs: remainingPairs,
         }));
 
         // Generate initial cards from the first few pairs
@@ -104,19 +109,21 @@ export function GameBoard() {
   const resetGame = useCallback(async () => {
     try {
       const settings = difficultySettings[progress.currentLevel];
-      const shuffledPairs = await getInitialShuffledPairs(progress.currentLevel);
+      const shuffledPairs = await getInitialShuffledPairs(
+        progress.currentLevel,
+      );
       const displayCount = settings.displayedPairs;
 
       // Split pairs into displayed and unused
       const displayedPairs = shuffledPairs.slice(0, displayCount);
       const remainingPairs = shuffledPairs.slice(displayCount);
 
-      setProgress(prev => ({
+      setProgress((prev) => ({
         ...prev,
         remainingTime: settings.timeLimit,
         matchedPairsInLevel: 0,
         isComplete: false,
-        unusedPairs: remainingPairs
+        unusedPairs: remainingPairs,
       }));
 
       // Generate initial cards from the first few pairs
@@ -135,18 +142,23 @@ export function GameBoard() {
   }, [progress.currentLevel, toast]);
 
   const findCardInColumns = (cardId: string): GameCard | undefined => {
-    return [...cards.leftColumn, ...cards.rightColumn].find(c => c.id === cardId);
+    return [...cards.leftColumn, ...cards.rightColumn].find(
+      (c) => c.id === cardId,
+    );
   };
 
   const isCardInLeftColumn = (cardId: string): boolean => {
-    return cards.leftColumn.some(card => card.id === cardId);
+    return cards.leftColumn.some((card) => card.id === cardId);
   };
 
   const replaceMatchedCards = useCallback(() => {
-    setCards(currentCards => {
+    setCards((currentCards) => {
       // Get all matched pairs that need to be replaced
-      const matchedCards = [...currentCards.leftColumn, ...currentCards.rightColumn].filter(card => card.isMatched);
-      const matchedPairIds = new Set(matchedCards.map(card => card.pairId));
+      const matchedCards = [
+        ...currentCards.leftColumn,
+        ...currentCards.rightColumn,
+      ].filter((card) => card.isMatched);
+      const matchedPairIds = new Set(matchedCards.map((card) => card.pairId));
       const numPairsToReplace = matchedPairIds.size;
 
       if (numPairsToReplace === 0) return currentCards;
@@ -158,23 +170,23 @@ export function GameBoard() {
       const newCards = generateGameCards(
         progress.currentLevel,
         nextPairs,
-        numPairsToReplace
+        numPairsToReplace,
       );
 
       // Update cards with new ones
       const updatedCards = {
-        leftColumn: currentCards.leftColumn.map(card => 
-          card.isMatched ? newCards.leftColumn.shift() || card : card
+        leftColumn: currentCards.leftColumn.map((card) =>
+          card.isMatched ? newCards.leftColumn.shift() || card : card,
         ),
-        rightColumn: currentCards.rightColumn.map(card =>
-          card.isMatched ? newCards.rightColumn.shift() || card : card
-        )
+        rightColumn: currentCards.rightColumn.map((card) =>
+          card.isMatched ? newCards.rightColumn.shift() || card : card,
+        ),
       };
 
       // Update unusedPairs
-      setProgress(prev => ({
+      setProgress((prev) => ({
         ...prev,
-        unusedPairs: prev.unusedPairs.slice(numPairsToReplace)
+        unusedPairs: prev.unusedPairs.slice(numPairsToReplace),
       }));
 
       return updatedCards;
@@ -182,7 +194,12 @@ export function GameBoard() {
   }, [progress.currentLevel, progress.unusedPairs]);
 
   const handleCardClick = (cardId: string) => {
-    if (transitionInProgress || progress.remainingTime <= 0 || progress.isComplete) return;
+    if (
+      transitionInProgress ||
+      progress.remainingTime <= 0 ||
+      progress.isComplete
+    )
+      return;
 
     const card = findCardInColumns(cardId);
     if (!card || card.isMatched || selectedCards.includes(cardId)) return;
@@ -218,13 +235,17 @@ export function GameBoard() {
 
         setTimeout(() => {
           setMatchAnimation(null);
-          setCards(current => ({
-            leftColumn: current.leftColumn.map(card =>
-              card.pairId === firstCard.pairId ? { ...card, isMatched: true } : card
+          setCards((current) => ({
+            leftColumn: current.leftColumn.map((card) =>
+              card.pairId === firstCard.pairId
+                ? { ...card, isMatched: true }
+                : card,
             ),
-            rightColumn: current.rightColumn.map(card =>
-              card.pairId === firstCard.pairId ? { ...card, isMatched: true } : card
-            )
+            rightColumn: current.rightColumn.map((card) =>
+              card.pairId === firstCard.pairId
+                ? { ...card, isMatched: true }
+                : card,
+            ),
           }));
 
           const newMatchedPairs = progress.matchedPairsInLevel + 1;
@@ -236,23 +257,24 @@ export function GameBoard() {
             replaceMatchedCards();
           }
 
-          setProgress(prev => ({
+          setProgress((prev) => ({
             ...prev,
             matchedPairsInLevel: newMatchedPairs,
             isComplete: levelComplete,
-            highestUnlockedLevel: levelComplete && canUnlockNextLevel({
-              ...prev,
-              matchedPairsInLevel: newMatchedPairs,
-              isComplete: levelComplete
-            })
-              ? Math.min((prev.currentLevel + 1), 3) as DifficultyLevel
-              : prev.highestUnlockedLevel
+            highestUnlockedLevel:
+              levelComplete &&
+              canUnlockNextLevel({
+                ...prev,
+                matchedPairsInLevel: newMatchedPairs,
+                isComplete: levelComplete,
+              })
+                ? (Math.min(prev.currentLevel + 1, 3) as DifficultyLevel)
+                : prev.highestUnlockedLevel,
           }));
 
           setSelectedCards([]);
           setTransitionInProgress(false);
         }, 1000);
-
       } else {
         // No match
         setTransitionInProgress(true);
@@ -267,25 +289,25 @@ export function GameBoard() {
   };
 
   const handleLevelSelect = (level: DifficultyLevel) => {
-    setProgress(prev => ({
+    setProgress((prev) => ({
       ...prev,
       currentLevel: level,
       matchedPairsInLevel: 0,
       remainingTime: difficultySettings[level].timeLimit,
       isComplete: false,
-      unusedPairs: [] // Reset unused pairs, will be populated by useEffect
+      unusedPairs: [], // Reset unused pairs, will be populated by useEffect
     }));
   };
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <DifficultySelector 
+      <DifficultySelector
         progress={progress}
         onSelectLevel={handleLevelSelect}
       />
@@ -294,7 +316,8 @@ export function GameBoard() {
           Time: {formatTime(progress.remainingTime)}
         </div>
         <div className="text-sm text-gray-600">
-          Matches: {progress.matchedPairsInLevel} / {difficultySettings[progress.currentLevel].requiredPairs}
+          Matches: {progress.matchedPairsInLevel} /{" "}
+          {difficultySettings[progress.currentLevel].requiredPairs}
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4 max-w-2xl mx-auto mb-8">
