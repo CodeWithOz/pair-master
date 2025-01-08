@@ -198,7 +198,7 @@ export function GameBoard() {
 
       return updatedCards;
     });
-  }, [progress.currentLevel, progress.unusedPairs]);
+  }, [progress.currentLevel]);
 
   const handleCardClick = (cardId: string) => {
     if (
@@ -242,27 +242,54 @@ export function GameBoard() {
 
         setTimeout(() => {
           setMatchAnimation(null);
-          setCards((current) => ({
-            leftColumn: current.leftColumn.map((card) =>
-              card.pairId === firstCard.pairId
-                ? { ...card, isMatched: true }
-                : card,
-            ),
-            rightColumn: current.rightColumn.map((card) =>
-              card.pairId === firstCard.pairId
-                ? { ...card, isMatched: true }
-                : card,
-            ),
-          }));
-
           const newMatchedPairs = progress.matchedPairsInLevel + 1;
           const settings = difficultySettings[progress.currentLevel];
           const levelComplete = newMatchedPairs >= settings.requiredPairs;
 
-          // Replace matched cards before updating progress
-          if (!levelComplete) {
-            replaceMatchedCards();
-          }
+          setCards((current) => {
+            // First mark cards as matched
+            const updatedCards = {
+              leftColumn: current.leftColumn.map((card) =>
+                card.pairId === firstCard.pairId
+                  ? { ...card, isMatched: true }
+                  : card,
+              ),
+              rightColumn: current.rightColumn.map((card) =>
+                card.pairId === firstCard.pairId
+                  ? { ...card, isMatched: true }
+                  : card,
+              ),
+            };
+
+            // If level isn't complete, replace matched cards in the same update
+            if (!levelComplete) {
+              const matchedCards = [
+                ...updatedCards.leftColumn,
+                ...updatedCards.rightColumn,
+              ].filter((card) => card.isMatched);
+              const matchedPairIds = new Set(matchedCards.map((card) => card.pairId));
+              const numPairsToReplace = matchedPairIds.size;
+
+              if (numPairsToReplace > 0) {
+                const nextPairs = progress.unusedPairs.slice(0, numPairsToReplace);
+                const newCards = generateGameCards(
+                  progress.currentLevel,
+                  nextPairs,
+                  numPairsToReplace,
+                );
+
+                return {
+                  leftColumn: updatedCards.leftColumn.map((card) =>
+                    card.isMatched ? newCards.leftColumn.shift() || card : card,
+                  ),
+                  rightColumn: updatedCards.rightColumn.map((card) =>
+                    card.isMatched ? newCards.rightColumn.shift() || card : card,
+                  ),
+                };
+              }
+            }
+            return updatedCards;
+          });
 
           setProgress((prev) => ({
             ...prev,
