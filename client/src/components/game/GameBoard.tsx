@@ -197,6 +197,10 @@ export function GameBoard() {
           const settings = difficultySettings[progress.currentLevel];
           const levelComplete = newMatchedPairs >= settings.requiredPairs;
 
+          // Get the next pair from unusedPairs if needed
+          const nextPair = !levelComplete ? progress.unusedPairs[0] : null;
+
+          // Update both cards and progress state in a single render cycle
           setCards((current) => {
             // First mark cards as matched
             const updatedCards = {
@@ -212,50 +216,32 @@ export function GameBoard() {
               ),
             };
 
-            // If level isn't complete, replace matched cards in the same update
-            if (!levelComplete) {
-              const matchedCards = [
-                ...updatedCards.leftColumn,
-                ...updatedCards.rightColumn,
-              ].filter((card) => card.isMatched);
-              const matchedPairIds = new Set(matchedCards.map((card) => card.pairId));
-              const numPairsToReplace = matchedPairIds.size;
+            // If level isn't complete and we have a next pair, replace matched cards
+            if (!levelComplete && nextPair) {
+              const newCards = generateGameCards(
+                progress.currentLevel,
+                [nextPair],
+                1
+              );
 
-              if (numPairsToReplace > 0) {
-                const nextPairs = progress.unusedPairs.slice(0, numPairsToReplace);
-                const newCards = generateGameCards(
-                  progress.currentLevel,
-                  nextPairs,
-                  numPairsToReplace,
-                );
-
-                setProgress((prev) => {
-                  console.log("prev.unusedPairs", prev.unusedPairs);
-                  return ({
-                    ...prev,
-                    unusedPairs: prev.unusedPairs.slice(numPairsToReplace),
-                    matchedPairsInLevel: newMatchedPairs,
-                  });
-                });
-
-                return {
-                  leftColumn: updatedCards.leftColumn.map((card) =>
-                    card.isMatched ? newCards.leftColumn.shift() || card : card,
-                  ),
-                  rightColumn: updatedCards.rightColumn.map((card) =>
-                    card.isMatched ? newCards.rightColumn.shift() || card : card,
-                  ),
-                };
-              }
+              return {
+                leftColumn: updatedCards.leftColumn.map((card) =>
+                  card.isMatched ? newCards.leftColumn.shift() || card : card,
+                ),
+                rightColumn: updatedCards.rightColumn.map((card) =>
+                  card.isMatched ? newCards.rightColumn.shift() || card : card,
+                ),
+              };
             }
+
             return updatedCards;
           });
 
-          // Only update progress if we didn't do it in the card replacement
-          if (levelComplete) {
-            setProgress((prev) => ({
-              ...prev,
-              matchedPairsInLevel: newMatchedPairs,
+          // Update progress state
+          setProgress((prev) => ({
+            ...prev,
+            unusedPairs: !levelComplete ? prev.unusedPairs.slice(1) : prev.unusedPairs,
+            matchedPairsInLevel: newMatchedPairs,
             isComplete: levelComplete,
             highestUnlockedLevel:
               levelComplete &&
@@ -266,8 +252,7 @@ export function GameBoard() {
               })
                 ? (Math.min(prev.currentLevel + 1, 3) as DifficultyLevel)
                 : prev.highestUnlockedLevel,
-            }));
-          }
+          }));
 
           setSelectedCards([]);
           setTransitionInProgress(false);
