@@ -312,7 +312,8 @@ export function GameBoard() {
               })
                 ? (Math.min(prev.currentLevel + 1, 3) as DifficultyLevel)
                 : prev.highestUnlockedLevel,
-          }));
+            }));
+          }
 
           setSelectedCards([]);
           setTransitionInProgress(false);
