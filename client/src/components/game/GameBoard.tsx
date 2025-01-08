@@ -165,8 +165,6 @@ export function GameBoard() {
 
       // Get the next set of pairs from unusedPairs
       const nextPairs = progress.unusedPairs.slice(0, numPairsToReplace);
-      console.log("progress.unusedPairs", progress.unusedPairs);
-      console.log("nextPairs", nextPairs);
 
       // Generate new cards for the matched positions
       const newCards = generateGameCards(
@@ -174,7 +172,6 @@ export function GameBoard() {
         nextPairs,
         numPairsToReplace,
       );
-      console.log("newCards", newCards);
 
       // Update cards with new ones
       const updatedCards = {
@@ -188,8 +185,6 @@ export function GameBoard() {
 
       // Update unusedPairs
       setProgress((prev) => {
-        console.log("prev.unusedPairs", prev.unusedPairs);
-        console.log("prev.unusedPairs.slice(numPairsToReplace)", prev.unusedPairs.slice(numPairsToReplace));
         return ({
           ...prev,
           unusedPairs: prev.unusedPairs.slice(numPairsToReplace),
@@ -278,11 +273,14 @@ export function GameBoard() {
                   numPairsToReplace,
                 );
 
-                setProgress((prev) => ({
-                  ...prev,
-                  unusedPairs: prev.unusedPairs.slice(numPairsToReplace),
-                  matchedPairsInLevel: newMatchedPairs,
-                }));
+                setProgress((prev) => {
+                  console.log("prev.unusedPairs", prev.unusedPairs);
+                  return ({
+                    ...prev,
+                    unusedPairs: prev.unusedPairs.slice(numPairsToReplace),
+                    matchedPairsInLevel: newMatchedPairs,
+                  });
+                });
 
                 return {
                   leftColumn: updatedCards.leftColumn.map((card) =>
