@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card } from "./Card";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,10 +33,18 @@ export function GameBoard() {
     isComplete: false,
     unusedPairs: [], // Initialize as empty array, will be populated in useEffect
   });
-  const [matchAnimation, setMatchAnimation] = useState<number | null>(null);
-  const [failAnimation, setFailAnimation] = useState<boolean>(false);
-  const [transitionInProgress, setTransitionInProgress] = useState(false);
+  const [activeMatchAnimations, setActiveMatchAnimations] = useState<Set<number>>(new Set());
+  const [activeFailAnimations, setActiveFailAnimations] = useState<Set<string>>(new Set());
+  const timeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const { toast } = useToast();
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
+      timeoutsRef.current.clear();
+    };
+  }, []);
 
   // Timer effect
   useEffect(() => {
@@ -104,10 +112,14 @@ export function GameBoard() {
     };
 
     initializeGame();
-  }, [progress.currentLevel]);
+  }, [progress.currentLevel, toast]);
 
   const resetGame = useCallback(async () => {
     try {
+      // Clear all existing timeouts
+      timeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
+      timeoutsRef.current.clear();
+
       const settings = difficultySettings[progress.currentLevel];
       const shuffledPairs = await getInitialShuffledPairs(
         progress.currentLevel,
@@ -129,8 +141,8 @@ export function GameBoard() {
       // Generate initial cards from the first few pairs
       setCards(generateGameCards(progress.currentLevel, displayedPairs));
       setSelectedCards([]);
-      setMatchAnimation(null);
-      setFailAnimation(false);
+      setActiveMatchAnimations(new Set());
+      setActiveFailAnimations(new Set());
     } catch (error) {
       console.error("Error resetting game:", error);
       toast({
@@ -152,12 +164,7 @@ export function GameBoard() {
   };
 
   const handleCardClick = (cardId: string) => {
-    if (
-      transitionInProgress ||
-      progress.remainingTime <= 0 ||
-      progress.isComplete
-    )
-      return;
+    if (progress.remainingTime <= 0 || progress.isComplete) return;
 
     const card = findCardInColumns(cardId);
     if (!card || card.isMatched || selectedCards.includes(cardId)) return;
@@ -167,7 +174,9 @@ export function GameBoard() {
 
     // If clicking in same column as an existing selection, replace that selection
     if (selectedCards.length === 1) {
-      const existingCard = findCardInColumns(selectedCards[0])!;
+      const existingCard = findCardInColumns(selectedCards[0]);
+      if (!existingCard) return;
+
       const existingIsLeft = isCardInLeftColumn(existingCard.id);
 
       if (isLeftColumn === existingIsLeft) {
@@ -183,16 +192,29 @@ export function GameBoard() {
 
     if (newSelected.length === 2) {
       const [firstId, secondId] = newSelected;
-      const firstCard = findCardInColumns(firstId)!;
-      const secondCard = findCardInColumns(secondId)!;
+      const firstCard = findCardInColumns(firstId);
+      const secondCard = findCardInColumns(secondId);
+
+      if (!firstCard || !secondCard) return;
 
       if (firstCard.pairId === secondCard.pairId) {
         // Match found
-        setTransitionInProgress(true);
-        setMatchAnimation(firstCard.pairId);
+        const matchKey = `match-${firstCard.pairId}`;
 
-        setTimeout(() => {
-          setMatchAnimation(null);
+        // Add to active animations
+        setActiveMatchAnimations((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(firstCard.pairId);
+          return newSet;
+        });
+
+        // Clear any existing timeout for this match
+        if (timeoutsRef.current.has(matchKey)) {
+          clearTimeout(timeoutsRef.current.get(matchKey));
+        }
+
+        // Start match transition
+        const timeoutId = setTimeout(() => {
           const newMatchedPairs = progress.matchedPairsInLevel + 1;
           const settings = difficultySettings[progress.currentLevel];
           const levelComplete = newMatchedPairs >= settings.requiredPairs;
@@ -226,10 +248,10 @@ export function GameBoard() {
 
               return {
                 leftColumn: updatedCards.leftColumn.map((card) =>
-                  card.isMatched ? newCards.leftColumn.shift() || card : card,
+                  card.isMatched && card.pairId === firstCard.pairId ? newCards.leftColumn.shift() || card : card,
                 ),
                 rightColumn: updatedCards.rightColumn.map((card) =>
-                  card.isMatched ? newCards.rightColumn.shift() || card : card,
+                  card.isMatched && card.pairId === firstCard.pairId ? newCards.rightColumn.shift() || card : card,
                 ),
               };
             }
@@ -254,23 +276,59 @@ export function GameBoard() {
                 : prev.highestUnlockedLevel,
           }));
 
+          // Remove the match animation
+          setActiveMatchAnimations((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(firstCard.pairId);
+            return newSet;
+          });
+
           setSelectedCards([]);
-          setTransitionInProgress(false);
+
+          // Clean up the timeout reference
+          timeoutsRef.current.delete(matchKey);
         }, 1000);
+
+        // Store the timeout reference
+        timeoutsRef.current.set(matchKey, timeoutId);
       } else {
         // No match
-        setTransitionInProgress(true);
-        setFailAnimation(true);
-        setTimeout(() => {
-          setFailAnimation(false);
+        const failKey = `fail-${firstId}-${secondId}`;
+
+        setActiveFailAnimations((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(failKey);
+          return newSet;
+        });
+
+        // Clear any existing timeout for this fail animation
+        if (timeoutsRef.current.has(failKey)) {
+          clearTimeout(timeoutsRef.current.get(failKey));
+        }
+
+        const timeoutId = setTimeout(() => {
+          setActiveFailAnimations((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(failKey);
+            return newSet;
+          });
           setSelectedCards([]);
-          setTransitionInProgress(false);
+
+          // Clean up the timeout reference
+          timeoutsRef.current.delete(failKey);
         }, 1000);
+
+        // Store the timeout reference
+        timeoutsRef.current.set(failKey, timeoutId);
       }
     }
   };
 
   const handleLevelSelect = (level: DifficultyLevel) => {
+    // Clear all existing timeouts when changing levels
+    timeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
+    timeoutsRef.current.clear();
+
     setProgress((prev) => ({
       ...prev,
       currentLevel: level,
@@ -310,8 +368,8 @@ export function GameBoard() {
               word={card.word}
               isMatched={card.isMatched}
               isSelected={selectedCards.includes(card.id)}
-              isMatchAnimation={matchAnimation === card.pairId}
-              isFailAnimation={failAnimation && selectedCards.includes(card.id)}
+              isMatchAnimation={activeMatchAnimations.has(card.pairId)}
+              isFailAnimation={activeFailAnimations.has(`fail-${selectedCards[0]}-${selectedCards[1]}`)}
               onClick={() => handleCardClick(card.id)}
             />
           ))}
@@ -323,8 +381,8 @@ export function GameBoard() {
               word={card.word}
               isMatched={card.isMatched}
               isSelected={selectedCards.includes(card.id)}
-              isMatchAnimation={matchAnimation === card.pairId}
-              isFailAnimation={failAnimation && selectedCards.includes(card.id)}
+              isMatchAnimation={activeMatchAnimations.has(card.pairId)}
+              isFailAnimation={activeFailAnimations.has(`fail-${selectedCards[0]}-${selectedCards[1]}`)}
               onClick={() => handleCardClick(card.id)}
             />
           ))}
