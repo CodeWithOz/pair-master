@@ -278,6 +278,12 @@ export function GameBoard() {
                   numPairsToReplace,
                 );
 
+                setProgress((prev) => ({
+                  ...prev,
+                  unusedPairs: prev.unusedPairs.slice(numPairsToReplace),
+                  matchedPairsInLevel: newMatchedPairs,
+                }));
+
                 return {
                   leftColumn: updatedCards.leftColumn.map((card) =>
                     card.isMatched ? newCards.leftColumn.shift() || card : card,
@@ -291,9 +297,11 @@ export function GameBoard() {
             return updatedCards;
           });
 
-          setProgress((prev) => ({
-            ...prev,
-            matchedPairsInLevel: newMatchedPairs,
+          // Only update progress if we didn't do it in the card replacement
+          if (levelComplete) {
+            setProgress((prev) => ({
+              ...prev,
+              matchedPairsInLevel: newMatchedPairs,
             isComplete: levelComplete,
             highestUnlockedLevel:
               levelComplete &&
