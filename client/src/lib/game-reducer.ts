@@ -1,4 +1,4 @@
-import { type GameCard, type GameProgress, type DifficultyLevel, type WordPair, difficultySettings, generateGameCards, prepareCrossPairs } from "./game-data";
+import { type GameCard, type GameProgress, type DifficultyLevel, type WordPair, difficultySettings, generateGameCards } from "./game-data";
 
 // State interface
 interface GameState {
@@ -10,11 +10,6 @@ interface GameState {
   progress: GameProgress;
   activeMatchAnimations: Set<number>;
   activeFailAnimations: Set<string>;
-  nextPreparedPair: {
-    id: number;
-    german: string;
-    english: string;
-  } | null;
 }
 
 // Action types
@@ -28,41 +23,17 @@ type GameAction =
   | { type: 'CHANGE_LEVEL'; payload: { level: DifficultyLevel } }
   | { type: 'RESET_LEVEL'; payload: { pairs: WordPair[] } };
 
-const initialState: GameState = {
-  cards: {
-    leftColumn: [],
-    rightColumn: [],
-  },
-  selectedCards: [],
-  progress: {
-    currentLevel: 1 as DifficultyLevel,
-    highestUnlockedLevel: 1 as DifficultyLevel,
-    matchedPairsInLevel: 0,
-    remainingTime: difficultySettings[1].timeLimit,
-    isComplete: false,
-    unusedPairs: [],
-  },
-  activeMatchAnimations: new Set<number>(),
-  activeFailAnimations: new Set<string>(),
-  nextPreparedPair: null,
-};
-
-export function gameReducer(state: GameState = initialState, action: GameAction): GameState {
+export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'INITIALIZE_GAME': {
       const { pairs, level } = action.payload;
       const settings = difficultySettings[level];
       const displayCount = settings.displayedPairs;
-
+      
       // Split pairs into displayed and unused
       const displayedPairs = pairs.slice(0, displayCount);
       const remainingPairs = pairs.slice(displayCount);
-
-      // Prepare the first cross-pair if we have unused pairs
-      const nextPreparedPair = remainingPairs.length > 0
-        ? prepareCrossPairs(remainingPairs).currentPair
-        : null;
-
+      
       return {
         ...state,
         cards: generateGameCards(level, displayedPairs),
@@ -77,81 +48,6 @@ export function gameReducer(state: GameState = initialState, action: GameAction)
         selectedCards: [],
         activeMatchAnimations: new Set(),
         activeFailAnimations: new Set(),
-        nextPreparedPair,
-      };
-    }
-
-    case 'MARK_PAIR_MATCHED': {
-      const { pairId } = action.payload;
-      const settings = difficultySettings[state.progress.currentLevel];
-
-      // Update cards state
-      let updatedCards = {
-        leftColumn: state.cards.leftColumn.map(card =>
-          card.pairId === pairId ? { ...card, isMatched: true } : card
-        ),
-        rightColumn: state.cards.rightColumn.map(card =>
-          card.pairId === pairId ? { ...card, isMatched: true } : card
-        ),
-      };
-
-      // Handle pair replacement
-      let nextPreparedPair = state.nextPreparedPair;
-      let unusedPairs = state.progress.unusedPairs;
-
-      if (state.nextPreparedPair) {
-        // Use the previously prepared pair
-        const newCards = generateGameCards(
-          state.progress.currentLevel,
-          [state.nextPreparedPair],
-          1
-        );
-
-        // Update the cards with the new pair
-        updatedCards = {
-          leftColumn: updatedCards.leftColumn.map(card =>
-            card.isMatched && card.pairId === pairId ? newCards.leftColumn[0] : card
-          ),
-          rightColumn: updatedCards.rightColumn.map(card =>
-            card.isMatched && card.pairId === pairId ? newCards.rightColumn[0] : card
-          ),
-        };
-
-        // Prepare next pairs if we have more unused pairs
-        if (unusedPairs.length >= 2) {
-          const crossPairResult = prepareCrossPairs(unusedPairs);
-          nextPreparedPair = crossPairResult.nextPair;
-          // Remove the used pairs from unused pairs
-          unusedPairs = unusedPairs.slice(2);
-        } else if (unusedPairs.length === 1) {
-          // If only one pair left, use it as-is
-          nextPreparedPair = {
-            id: unusedPairs[0].id,
-            german: unusedPairs[0].german,
-            english: unusedPairs[0].english,
-          };
-          unusedPairs = [];
-        } else {
-          nextPreparedPair = null;
-        }
-      }
-
-      const newMatchedPairs = state.progress.matchedPairsInLevel + 1;
-      const levelComplete = newMatchedPairs >= settings.requiredPairs;
-
-      return {
-        ...state,
-        cards: updatedCards,
-        progress: {
-          ...state.progress,
-          matchedPairsInLevel: newMatchedPairs,
-          isComplete: levelComplete,
-          unusedPairs,
-          highestUnlockedLevel: levelComplete
-            ? (Math.min(state.progress.currentLevel + 1, 3) as DifficultyLevel)
-            : state.progress.highestUnlockedLevel,
-        },
-        nextPreparedPair,
       };
     }
 
@@ -179,6 +75,52 @@ export function gameReducer(state: GameState = initialState, action: GameAction)
       return {
         ...state,
         selectedCards: newSelected,
+      };
+    }
+
+    case 'MARK_PAIR_MATCHED': {
+      const { pairId } = action.payload;
+      const settings = difficultySettings[state.progress.currentLevel];
+      
+      // Update cards state
+      let updatedCards = {
+        leftColumn: state.cards.leftColumn.map(card =>
+          card.pairId === pairId ? { ...card, isMatched: true } : card
+        ),
+        rightColumn: state.cards.rightColumn.map(card =>
+          card.pairId === pairId ? { ...card, isMatched: true } : card
+        ),
+      };
+
+      // If we have a next pair, replace the matched cards
+      const nextPair: WordPair | null = state.progress.unusedPairs[0] || null;
+      if (nextPair) {
+        const newCards = generateGameCards(state.progress.currentLevel, [nextPair], 1);
+        updatedCards = {
+          leftColumn: updatedCards.leftColumn.map(card =>
+            card.isMatched && card.pairId === pairId ? newCards.leftColumn[0] : card
+          ),
+          rightColumn: updatedCards.rightColumn.map(card =>
+            card.isMatched && card.pairId === pairId ? newCards.rightColumn[0] : card
+          ),
+        };
+      }
+
+      const newMatchedPairs = state.progress.matchedPairsInLevel + 1;
+      const levelComplete = newMatchedPairs >= settings.requiredPairs;
+      
+      return {
+        ...state,
+        cards: updatedCards,
+        progress: {
+          ...state.progress,
+          matchedPairsInLevel: newMatchedPairs,
+          isComplete: levelComplete,
+          unusedPairs: state.progress.unusedPairs.slice(1),
+          highestUnlockedLevel: levelComplete
+            ? (Math.min(state.progress.currentLevel + 1, 3) as DifficultyLevel)
+            : state.progress.highestUnlockedLevel,
+        },
       };
     }
 
@@ -242,7 +184,6 @@ export function gameReducer(state: GameState = initialState, action: GameAction)
         selectedCards: [],
         activeMatchAnimations: new Set(),
         activeFailAnimations: new Set(),
-        nextPreparedPair: null,
       };
     }
 
@@ -250,11 +191,11 @@ export function gameReducer(state: GameState = initialState, action: GameAction)
       const { pairs } = action.payload;
       const settings = difficultySettings[state.progress.currentLevel];
       const displayCount = settings.displayedPairs;
-
+      
       // Split pairs into displayed and unused
       const displayedPairs = pairs.slice(0, displayCount);
       const remainingPairs = pairs.slice(displayCount);
-
+      
       return {
         ...state,
         cards: generateGameCards(state.progress.currentLevel, displayedPairs),
@@ -268,7 +209,6 @@ export function gameReducer(state: GameState = initialState, action: GameAction)
         selectedCards: [],
         activeMatchAnimations: new Set(),
         activeFailAnimations: new Set(),
-        nextPreparedPair: null,
       };
     }
 

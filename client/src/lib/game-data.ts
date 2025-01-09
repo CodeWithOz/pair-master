@@ -104,7 +104,6 @@ export interface GameProgress {
   remainingTime: number;
   isComplete: boolean;
   unusedPairs: WordPair[]; // Added state to track unused pairs
-  nextPair: {id:number; german: string; english: string;} | null; //Added nextPair
 }
 
 export function isLevelUnlocked(progress: GameProgress, level: DifficultyLevel): boolean {
@@ -132,7 +131,7 @@ export async function getInitialShuffledPairs(level: DifficultyLevel): Promise<W
 }
 
 export function generateGameCards(
-  level: DifficultyLevel,
+  level: DifficultyLevel, 
   availablePairs: WordPair[],
   displayCount: number = difficultySettings[level].displayedPairs
 ): { leftColumn: GameCard[], rightColumn: GameCard[] } {
@@ -174,55 +173,4 @@ export function generateGameCards(
   }
 
   return { leftColumn: leftCards, rightColumn: rightCards };
-}
-
-export interface CrossPairResult {
-  currentPair: {
-    id: number;
-    german: string;
-    english: string;
-  };
-  nextPair: {
-    id: number;
-    german: string;
-    english: string;
-  } | null;
-}
-
-export function prepareCrossPairs(unusedPairs: WordPair[]): CrossPairResult {
-  if (unusedPairs.length === 0) {
-    throw new Error("No unused pairs available");
-  }
-
-  // If only one pair left, return it as-is
-  if (unusedPairs.length === 1) {
-    return {
-      currentPair: {
-        id: unusedPairs[0].id,
-        german: unusedPairs[0].german,
-        english: unusedPairs[0].english
-      },
-      nextPair: null
-    };
-  }
-
-  // Take the next two pairs
-  const [pair1, pair2] = unusedPairs.slice(0,2);
-
-  // Create all possible combinations
-  const combinations = [
-    { id: pair1.id, german: pair1.german, english: pair1.english },
-    { id: pair2.id, german: pair2.german, english: pair2.english },
-    { id: pair1.id, german: pair1.german, english: pair2.english },
-    { id: pair2.id, german: pair2.german, english: pair1.english }
-  ];
-
-  // Randomly select two different combinations
-  const shuffledCombinations = [...combinations].sort(() => Math.random() - 0.5);
-  const [currentPair, nextPair] = shuffledCombinations;
-
-  return {
-    currentPair,
-    nextPair
-  };
 }
