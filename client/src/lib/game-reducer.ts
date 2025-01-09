@@ -16,7 +16,7 @@ interface GameState {
 type GameAction =
   | { type: 'INITIALIZE_GAME'; payload: { pairs: WordPair[]; level: DifficultyLevel } }
   | { type: 'SELECT_CARD'; payload: { cardId: string; isLeftColumn: boolean } }
-  | { type: 'MARK_PAIR_MATCHED'; payload: { pairId: number; nextPair: WordPair | null } }
+  | { type: 'MARK_PAIR_MATCHED'; payload: { pairId: number } }
   | { type: 'CLEAR_SELECTED_PAIR'; payload: { cardIds: string[] } }
   | { type: 'SET_ANIMATION'; payload: { type: 'match' | 'fail'; key: string | number; active: boolean } }
   | { type: 'UPDATE_TIMER'; payload: { newTime: number } }
@@ -32,7 +32,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       
       // Split pairs into displayed and unused
       const displayedPairs = pairs.slice(0, displayCount);
-      const remainingPairs = pairs.slice(displayCount + 1);
+      const remainingPairs = pairs.slice(displayCount);
       
       return {
         ...state,
@@ -79,7 +79,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case 'MARK_PAIR_MATCHED': {
-      const { pairId, nextPair } = action.payload;
+      const { pairId } = action.payload;
       const settings = difficultySettings[state.progress.currentLevel];
       
       // Update cards state
@@ -93,6 +93,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       };
 
       // If we have a next pair, replace the matched cards
+      const nextPair: WordPair | null = state.progress.unusedPairs[0] || null;
       if (nextPair) {
         const newCards = generateGameCards(state.progress.currentLevel, [nextPair], 1);
         updatedCards = {
@@ -193,7 +194,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       
       // Split pairs into displayed and unused
       const displayedPairs = pairs.slice(0, displayCount);
-      const remainingPairs = pairs.slice(displayCount + 1);
+      const remainingPairs = pairs.slice(displayCount);
       
       return {
         ...state,

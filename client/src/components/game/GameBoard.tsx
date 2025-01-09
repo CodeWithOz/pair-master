@@ -35,7 +35,6 @@ export function GameBoard() {
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const { toast } = useToast();
   const timeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  const nextPairRef = useRef<WordPair | null>(null);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -84,11 +83,6 @@ export function GameBoard() {
         const shuffledPairs = await getInitialShuffledPairs(
           state.progress.currentLevel,
         );
-        const settings = difficultySettings[state.progress.currentLevel];
-        const displayCount = settings.displayedPairs;
-
-        // Store the next pair reference
-        nextPairRef.current = shuffledPairs[displayCount];
 
         dispatch({
           type: 'INITIALIZE_GAME',
@@ -182,7 +176,7 @@ export function GameBoard() {
         const timeoutId = setTimeout(() => {
           dispatch({
             type: 'MARK_PAIR_MATCHED',
-            payload: { pairId: firstCard.pairId, nextPair: nextPairRef.current },
+            payload: { pairId: firstCard.pairId },
           });
 
           // Remove the match animation
