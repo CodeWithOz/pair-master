@@ -29,6 +29,8 @@ const initialState = {
   },
   activeMatchAnimations: new Set<number>(),
   activeFailAnimations: new Set<string>(),
+  currentRandomizedPairs: [],
+  nextPairIndex: 0,
 };
 
 export function GameBoard() {

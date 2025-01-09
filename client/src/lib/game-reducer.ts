@@ -1,6 +1,8 @@
 import { type GameCard, type GameProgress, type DifficultyLevel, type WordPair, difficultySettings, generateGameCards } from "./game-data";
 
 // State interface
+interface RandomizedPair extends WordPair {}
+
 interface GameState {
   cards: {
     leftColumn: GameCard[];
@@ -10,6 +12,8 @@ interface GameState {
   progress: GameProgress;
   activeMatchAnimations: Set<number>;
   activeFailAnimations: Set<string>;
+  currentRandomizedPairs: RandomizedPair[];
+  nextPairIndex: number;
 }
 
 // Action types
@@ -33,6 +37,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       // Split pairs into displayed and unused
       const displayedPairs = pairs.slice(0, displayCount);
       const remainingPairs = pairs.slice(displayCount);
+
+      // Initialize randomized pairs
+      const { randomizedPairs, remainingUnused } = createRandomizedPairs(remainingPairs);
       
       return {
         ...state,
@@ -43,11 +50,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           matchedPairsInLevel: 0,
           remainingTime: settings.timeLimit,
           isComplete: false,
-          unusedPairs: remainingPairs,
+          unusedPairs: remainingUnused,
         },
         selectedCards: [],
         activeMatchAnimations: new Set(),
         activeFailAnimations: new Set(),
+        currentRandomizedPairs: randomizedPairs,
+        nextPairIndex: 0,
       };
     }
 
@@ -92,8 +101,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ),
       };
 
-      // If we have a next pair, replace the matched cards
-      const nextPair: WordPair | null = state.progress.unusedPairs[0] || null;
+      // Get next pair from randomized pairs or create new ones
+      const { randomizedPair: nextPair, currentRandomizedPairs, nextPairIndex, unusedPairs } = getNextRandomizedPair(state);
       if (nextPair) {
         const newCards = generateGameCards(state.progress.currentLevel, [nextPair], 1);
         updatedCards = {
@@ -116,11 +125,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           ...state.progress,
           matchedPairsInLevel: newMatchedPairs,
           isComplete: levelComplete,
-          unusedPairs: state.progress.unusedPairs.slice(1),
+          unusedPairs,
           highestUnlockedLevel: levelComplete
             ? (Math.min(state.progress.currentLevel + 1, 3) as DifficultyLevel)
             : state.progress.highestUnlockedLevel,
         },
+        currentRandomizedPairs,
+        nextPairIndex,
       };
     }
 
@@ -195,7 +206,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       // Split pairs into displayed and unused
       const displayedPairs = pairs.slice(0, displayCount);
       const remainingPairs = pairs.slice(displayCount);
-      
+
+      // Initialize randomized pairs
+      const { randomizedPairs, remainingUnused } = createRandomizedPairs(remainingPairs);
+
       return {
         ...state,
         cards: generateGameCards(state.progress.currentLevel, displayedPairs),
@@ -204,15 +218,92 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           matchedPairsInLevel: 0,
           remainingTime: settings.timeLimit,
           isComplete: false,
-          unusedPairs: remainingPairs,
+          unusedPairs: remainingUnused,
         },
         selectedCards: [],
         activeMatchAnimations: new Set(),
         activeFailAnimations: new Set(),
+        currentRandomizedPairs: randomizedPairs,
+        nextPairIndex: 0,
       };
     }
 
     default:
       return state;
   }
+}
+
+function shuffleArray<T>(array: T[]): T[] {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
+function createRandomizedPairs(unusedPairs: WordPair[]): { 
+  randomizedPairs: RandomizedPair[], 
+  remainingUnused: WordPair[] 
+} {
+  if (unusedPairs.length === 0) {
+    return { randomizedPairs: [], remainingUnused: [] };
+  }
+
+  if (unusedPairs.length === 1) {
+    return {
+      randomizedPairs: [unusedPairs[0]],
+      remainingUnused: unusedPairs.slice(1)
+    };
+  }
+
+  // Take first two pairs
+  const pairsToRandomize = unusedPairs.slice(0, 2);
+  const remainingUnused = unusedPairs.slice(2);
+
+  // Create all possible combinations
+  const allWords = pairsToRandomize.flatMap(pair => ([
+    { id: pair.id, word: pair.german, isGerman: true, difficulty: pair.difficulty },
+    { id: pair.id, word: pair.english, isGerman: false, difficulty: pair.difficulty }
+  ]));
+
+  // Shuffle German and English words separately
+  const germanWords = shuffleArray(allWords.filter(w => w.isGerman));
+  const englishWords = shuffleArray(allWords.filter(w => !w.isGerman));
+
+  // Create new pairs
+  const randomizedPairs: RandomizedPair[] = germanWords.map((german, i) => ({
+    id: german.id,
+    german: german.word,
+    english: englishWords[i].word,
+    difficulty: german.difficulty,
+  }));
+
+  return { randomizedPairs, remainingUnused };
+}
+
+function getNextRandomizedPair(state: GameState): {
+  randomizedPair: RandomizedPair | null,
+  currentRandomizedPairs: RandomizedPair[],
+  nextPairIndex: number,
+  unusedPairs: WordPair[],
+} {
+  if (state.currentRandomizedPairs.length > state.nextPairIndex) {
+    return {
+      randomizedPair: state.currentRandomizedPairs[state.nextPairIndex],
+      currentRandomizedPairs: state.currentRandomizedPairs,
+      nextPairIndex: state.nextPairIndex + 1,
+      unusedPairs: state.progress.unusedPairs,
+    };
+  }
+
+  // Create new randomized pairs
+  const { randomizedPairs, remainingUnused } = createRandomizedPairs(state.progress.unusedPairs);
+
+  return {
+    randomizedPair: randomizedPairs.length > 0 ? randomizedPairs[0] : null,
+    currentRandomizedPairs: randomizedPairs,
+    nextPairIndex: 0,
+    unusedPairs: remainingUnused,
+  };
 }
