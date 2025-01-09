@@ -221,6 +221,7 @@ export function GameBoard() {
 
           // Get the next pair from unusedPairs if needed
           const nextPair = !levelComplete ? progress.unusedPairs[0] : null;
+          console.log("nextPair", nextPair);
 
           // Update both cards and progress state in a single render cycle
           setCards((current) => {
@@ -262,7 +263,7 @@ export function GameBoard() {
           // Update progress state
           setProgress((prev) => ({
             ...prev,
-            unusedPairs: !levelComplete ? prev.unusedPairs.slice(1) : prev.unusedPairs,
+            unusedPairs: !!console.log("in setProgress", prev.unusedPairs) || !levelComplete ? prev.unusedPairs.slice(1) : prev.unusedPairs,
             matchedPairsInLevel: newMatchedPairs,
             isComplete: levelComplete,
             highestUnlockedLevel:
