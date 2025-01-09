@@ -369,7 +369,10 @@ export function GameBoard() {
               isMatched={card.isMatched}
               isSelected={selectedCards.includes(card.id)}
               isMatchAnimation={activeMatchAnimations.has(card.pairId)}
-              isFailAnimation={activeFailAnimations.has(`fail-${selectedCards[0]}-${selectedCards[1]}`)}
+              isFailAnimation={Array.from(activeFailAnimations).some(key => {
+                const [_, id1, id2] = key.split('-');
+                return card.id === id1 || card.id === id2;
+              })}
               onClick={() => handleCardClick(card.id)}
             />
           ))}
@@ -382,7 +385,10 @@ export function GameBoard() {
               isMatched={card.isMatched}
               isSelected={selectedCards.includes(card.id)}
               isMatchAnimation={activeMatchAnimations.has(card.pairId)}
-              isFailAnimation={activeFailAnimations.has(`fail-${selectedCards[0]}-${selectedCards[1]}`)}
+              isFailAnimation={Array.from(activeFailAnimations).some(key => {
+                const [_, id1, id2] = key.split('-');
+                return card.id === id1 || card.id === id2;
+              })}
               onClick={() => handleCardClick(card.id)}
             />
           ))}
