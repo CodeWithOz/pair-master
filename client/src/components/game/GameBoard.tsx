@@ -213,6 +213,8 @@ export function GameBoard() {
           clearTimeout(timeoutsRef.current.get(matchKey));
         }
 
+        const nextPairRef = useRef<WordPair | null>(null);
+        nextPairRef.current = !levelComplete ? progress.unusedPairs[0] : null;
         // Start match transition
         const timeoutId = setTimeout(() => {
           const newMatchedPairs = progress.matchedPairsInLevel + 1;
