@@ -293,7 +293,7 @@ export function GameBoard() {
         timeoutsRef.current.set(matchKey, timeoutId);
       } else {
         // No match
-        const failKey = `fail-${firstId}-${secondId}`;
+        const failKey = `fail_${firstId}_${secondId}`;
 
         setActiveFailAnimations((prev) => {
           const newSet = new Set(prev);
@@ -323,6 +323,14 @@ export function GameBoard() {
       }
     }
   };
+
+  const getIsFailAnimation = (cardId: string): boolean => {
+    return Array.from(activeFailAnimations).some(key => {
+      const [_, id1, id2] = key.split('_');
+      console.log(key, id1, id2, cardId);
+      return cardId === id1 || cardId === id2;
+    });
+  }
 
   const handleLevelSelect = (level: DifficultyLevel) => {
     // Clear all existing timeouts when changing levels
@@ -369,10 +377,7 @@ export function GameBoard() {
               isMatched={card.isMatched}
               isSelected={selectedCards.includes(card.id)}
               isMatchAnimation={activeMatchAnimations.has(card.pairId)}
-              isFailAnimation={Array.from(activeFailAnimations).some(key => {
-                const [_, id1, id2] = key.split('-');
-                return card.id === id1 || card.id === id2;
-              })}
+              isFailAnimation={getIsFailAnimation(card.id)}
               onClick={() => handleCardClick(card.id)}
             />
           ))}
@@ -385,10 +390,7 @@ export function GameBoard() {
               isMatched={card.isMatched}
               isSelected={selectedCards.includes(card.id)}
               isMatchAnimation={activeMatchAnimations.has(card.pairId)}
-              isFailAnimation={Array.from(activeFailAnimations).some(key => {
-                const [_, id1, id2] = key.split('-');
-                return card.id === id1 || card.id === id2;
-              })}
+              isFailAnimation={getIsFailAnimation(card.id)}
               onClick={() => handleCardClick(card.id)}
             />
           ))}
