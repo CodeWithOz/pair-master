@@ -173,8 +173,8 @@ export function GameBoard() {
     let newSelected = [...selectedCards];
 
     // If clicking in same column as an existing selection, replace that selection
-    if (selectedCards.length === 1) {
-      const existingCard = findCardInColumns(selectedCards[0]);
+    if (selectedCards.length % 2 === 1) {
+      const existingCard = findCardInColumns(selectedCards[selectedCards.length - 1]);
       if (!existingCard) return;
 
       const existingIsLeft = isCardInLeftColumn(existingCard.id);
@@ -190,8 +190,8 @@ export function GameBoard() {
 
     setSelectedCards(newSelected);
 
-    if (newSelected.length === 2) {
-      const [firstId, secondId] = newSelected;
+    if (newSelected.length % 2 === 0) {
+      const [firstId, secondId] = newSelected.slice(newSelected.length - 2);
       const firstCard = findCardInColumns(firstId);
       const secondCard = findCardInColumns(secondId);
 
@@ -327,7 +327,6 @@ export function GameBoard() {
   const getIsFailAnimation = (cardId: string): boolean => {
     return Array.from(activeFailAnimations).some(key => {
       const [_, id1, id2] = key.split('_');
-      console.log(key, id1, id2, cardId);
       return cardId === id1 || cardId === id2;
     });
   }
