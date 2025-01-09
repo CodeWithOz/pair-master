@@ -283,7 +283,7 @@ export function GameBoard() {
             return newSet;
           });
 
-          setSelectedCards([]);
+          setSelectedCards((prev) => prev.filter((cardId) => cardId !== firstId && cardId !== secondId));
 
           // Clean up the timeout reference
           timeoutsRef.current.delete(matchKey);
@@ -312,7 +312,7 @@ export function GameBoard() {
             newSet.delete(failKey);
             return newSet;
           });
-          setSelectedCards([]);
+          setSelectedCards((prev) => prev.filter((cardId) => cardId !== firstId && cardId !== secondId));
 
           // Clean up the timeout reference
           timeoutsRef.current.delete(failKey);
