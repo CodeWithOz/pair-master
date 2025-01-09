@@ -36,6 +36,7 @@ export function GameBoard() {
   const [activeMatchAnimations, setActiveMatchAnimations] = useState<Set<number>>(new Set());
   const [activeFailAnimations, setActiveFailAnimations] = useState<Set<string>>(new Set());
   const timeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const nextPairRef = useRef<WordPair | null>(null);
   const { toast } = useToast();
 
   // Cleanup timeouts on unmount
@@ -213,8 +214,8 @@ export function GameBoard() {
           clearTimeout(timeoutsRef.current.get(matchKey));
         }
 
-        const nextPairRef = useRef<WordPair | null>(null);
-        nextPairRef.current = !levelComplete ? progress.unusedPairs[0] : null;
+        // Update ref with next pair
+        nextPairRef.current = progress.unusedPairs[0];
         // Start match transition
         const timeoutId = setTimeout(() => {
           const newMatchedPairs = progress.matchedPairsInLevel + 1;
