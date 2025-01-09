@@ -93,7 +93,11 @@ export function GameBoard() {
 
         // Split pairs into displayed and unused
         const displayedPairs = shuffledPairs.slice(0, displayCount);
-        const remainingPairs = shuffledPairs.slice(displayCount);
+        nextPairRef.current = shuffledPairs[displayCount];
+        const remainingPairs = shuffledPairs.slice(displayCount + 1);
+        console.log("starting nextPairRef.current", nextPairRef.current);
+        console.log("remainingPairs", remainingPairs);
+        console.log("shuffledPairs", shuffledPairs);
 
         setProgress((prev) => ({
           ...prev,
@@ -129,7 +133,11 @@ export function GameBoard() {
 
       // Split pairs into displayed and unused
       const displayedPairs = shuffledPairs.slice(0, displayCount);
-      const remainingPairs = shuffledPairs.slice(displayCount);
+      nextPairRef.current = shuffledPairs[displayCount];
+      const remainingPairs = shuffledPairs.slice(displayCount + 1);
+      console.log("starting nextPairRef.current", nextPairRef.current);
+      console.log("remainingPairs", remainingPairs);
+      console.log("shuffledPairs", shuffledPairs);
 
       setProgress((prev) => ({
         ...prev,
@@ -214,20 +222,12 @@ export function GameBoard() {
           clearTimeout(timeoutsRef.current.get(matchKey));
         }
 
-        // Update ref with next pair
-        nextPairRef.current = progress.unusedPairs[0];
         // Start match transition
         const timeoutId = setTimeout(() => {
-          const newMatchedPairs = progress.matchedPairsInLevel + 1;
-          const settings = difficultySettings[progress.currentLevel];
-          const levelComplete = newMatchedPairs >= settings.requiredPairs;
-
-          // Get the next pair from unusedPairs if needed
-          const nextPair = !levelComplete ? progress.unusedPairs[0] : null;
-          console.log("nextPair", nextPair);
-
           // Update both cards and progress state in a single render cycle
+          console.log("timeout executing");
           setCards((current) => {
+            console.log("setCards executing");
             // First mark cards as matched
             const updatedCards = {
               leftColumn: current.leftColumn.map((card) =>
@@ -243,10 +243,11 @@ export function GameBoard() {
             };
 
             // If level isn't complete and we have a next pair, replace matched cards
-            if (!levelComplete && nextPair) {
+            if (nextPairRef.current) {
+              console.log("using next pair ref", nextPairRef.current);
               const newCards = generateGameCards(
                 progress.currentLevel,
-                [nextPair],
+                [nextPairRef.current],
                 1
               );
 
@@ -264,21 +265,28 @@ export function GameBoard() {
           });
 
           // Update progress state
-          setProgress((prev) => ({
-            ...prev,
-            unusedPairs: !!console.log("in setProgress", prev.unusedPairs) || !levelComplete ? prev.unusedPairs.slice(1) : prev.unusedPairs,
-            matchedPairsInLevel: newMatchedPairs,
-            isComplete: levelComplete,
-            highestUnlockedLevel:
-              levelComplete &&
-              canUnlockNextLevel({
-                ...prev,
-                matchedPairsInLevel: newMatchedPairs,
-                isComplete: levelComplete,
-              })
-                ? (Math.min(prev.currentLevel + 1, 3) as DifficultyLevel)
-                : prev.highestUnlockedLevel,
-          }));
+          setProgress((prev) => {
+            nextPairRef.current = prev.unusedPairs[0] || null;
+            const newMatchedPairs = prev.matchedPairsInLevel + 1;
+            const settings = difficultySettings[prev.currentLevel];
+            const levelComplete = newMatchedPairs >= settings.requiredPairs;
+
+            return ({
+              ...prev,
+              unusedPairs: prev.unusedPairs.slice(1),
+              matchedPairsInLevel: newMatchedPairs,
+              isComplete: levelComplete,
+              highestUnlockedLevel:
+                levelComplete &&
+                canUnlockNextLevel({
+                  ...prev,
+                  matchedPairsInLevel: newMatchedPairs,
+                  isComplete: levelComplete,
+                })
+                  ? (Math.min(prev.currentLevel + 1, 3) as DifficultyLevel)
+                  : prev.highestUnlockedLevel,
+            });
+          });
 
           // Remove the match animation
           setActiveMatchAnimations((prev) => {
