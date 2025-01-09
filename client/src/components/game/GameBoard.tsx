@@ -95,9 +95,6 @@ export function GameBoard() {
         const displayedPairs = shuffledPairs.slice(0, displayCount);
         nextPairRef.current = shuffledPairs[displayCount];
         const remainingPairs = shuffledPairs.slice(displayCount + 1);
-        console.log("starting nextPairRef.current", nextPairRef.current);
-        console.log("remainingPairs", remainingPairs);
-        console.log("shuffledPairs", shuffledPairs);
 
         setProgress((prev) => ({
           ...prev,
@@ -135,9 +132,6 @@ export function GameBoard() {
       const displayedPairs = shuffledPairs.slice(0, displayCount);
       nextPairRef.current = shuffledPairs[displayCount];
       const remainingPairs = shuffledPairs.slice(displayCount + 1);
-      console.log("starting nextPairRef.current", nextPairRef.current);
-      console.log("remainingPairs", remainingPairs);
-      console.log("shuffledPairs", shuffledPairs);
 
       setProgress((prev) => ({
         ...prev,
@@ -225,9 +219,7 @@ export function GameBoard() {
         // Start match transition
         const timeoutId = setTimeout(() => {
           // Update both cards and progress state in a single render cycle
-          console.log("timeout executing");
           setCards((current) => {
-            console.log("setCards executing");
             // First mark cards as matched
             const updatedCards = {
               leftColumn: current.leftColumn.map((card) =>
@@ -244,7 +236,6 @@ export function GameBoard() {
 
             // If level isn't complete and we have a next pair, replace matched cards
             if (nextPairRef.current) {
-              console.log("using next pair ref", nextPairRef.current);
               const newCards = generateGameCards(
                 progress.currentLevel,
                 [nextPairRef.current],
