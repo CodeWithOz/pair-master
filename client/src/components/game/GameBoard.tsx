@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   type GameCard,
   type DifficultyLevel,
-  type WordPair,
   difficultySettings,
   getInitialShuffledPairs,
 } from "@/lib/game-data";

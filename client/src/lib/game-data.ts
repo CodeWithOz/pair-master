@@ -1,10 +1,16 @@
 import { z } from "zod";
+import { shuffleArray } from "./utils";
 
 export interface WordPair {
   id: number;
   german: string;
   english: string;
   difficulty: number;
+}
+
+export interface ExtendedWordPair extends WordPair {
+  germanWordPairId: number;
+  englishWordPairId: number;
 }
 
 export const difficultyLevels = {
@@ -103,7 +109,7 @@ export interface GameProgress {
   matchedPairsInLevel: number;
   remainingTime: number;
   isComplete: boolean;
-  unusedPairs: WordPair[]; // Added state to track unused pairs
+  unusedPairs: ExtendedWordPair[]; // Added state to track unused pairs
 }
 
 export function isLevelUnlocked(progress: GameProgress, level: DifficultyLevel): boolean {
@@ -125,14 +131,16 @@ export async function getWordPairsForLevel(level: DifficultyLevel): Promise<Word
   return await db.wordPairs.where('difficulty').equals(level).toArray();
 }
 
-export async function getInitialShuffledPairs(level: DifficultyLevel): Promise<WordPair[]> {
+export async function getInitialShuffledPairs(level: DifficultyLevel): Promise<ExtendedWordPair[]> {
   const levelPairs = await getWordPairsForLevel(level);
-  return [...levelPairs].sort(() => Math.random() - 0.5);
+  return shuffleArray([
+    ...levelPairs.map((pair) => ({ ...pair, germanWordPairId: pair.id, englishWordPairId: pair.id }))
+  ]);
 }
 
 export function generateGameCards(
   level: DifficultyLevel, 
-  availablePairs: WordPair[],
+  availablePairs: ExtendedWordPair[],
   displayCount: number = difficultySettings[level].displayedPairs
 ): { leftColumn: GameCard[], rightColumn: GameCard[] } {
   // Take the first n pairs sequentially from available pairs
@@ -147,7 +155,7 @@ export function generateGameCards(
     leftCards.push({
       id: `en-${pair.id}-${timestamp}`,
       word: pair.english,
-      pairId: pair.id,
+      pairId: pair.englishWordPairId,
       language: 'english',
       isMatched: false
     });
@@ -155,22 +163,11 @@ export function generateGameCards(
     rightCards.push({
       id: `de-${pair.id}-${timestamp}`,
       word: pair.german,
-      pairId: pair.id,
+      pairId: pair.germanWordPairId,
       language: 'german',
       isMatched: false
     });
   });
 
-  // Shuffle only the display order, not the pair selection
-  for (let i = leftCards.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [leftCards[i], leftCards[j]] = [leftCards[j], leftCards[i]];
-  }
-
-  for (let i = rightCards.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [rightCards[i], rightCards[j]] = [rightCards[j], rightCards[i]];
-  }
-
-  return { leftColumn: leftCards, rightColumn: rightCards };
+  return { leftColumn: shuffleArray(leftCards), rightColumn: shuffleArray(rightCards) };
 }

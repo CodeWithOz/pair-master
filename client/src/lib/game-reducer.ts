@@ -1,8 +1,7 @@
-import { type GameCard, type GameProgress, type DifficultyLevel, type WordPair, difficultySettings, generateGameCards } from "./game-data";
+import { type GameCard, type GameProgress, type DifficultyLevel, difficultySettings, generateGameCards, ExtendedWordPair } from "./game-data";
+import { shuffleArray } from "./utils";
 
 // State interface
-interface RandomizedPair extends WordPair {}
-
 interface GameState {
   cards: {
     leftColumn: GameCard[];
@@ -12,20 +11,20 @@ interface GameState {
   progress: GameProgress;
   activeMatchAnimations: Set<number>;
   activeFailAnimations: Set<string>;
-  currentRandomizedPairs: RandomizedPair[];
+  currentRandomizedPairs: ExtendedWordPair[];
   nextPairIndex: number;
 }
 
 // Action types
 type GameAction =
-  | { type: 'INITIALIZE_GAME'; payload: { pairs: WordPair[]; level: DifficultyLevel } }
+  | { type: 'INITIALIZE_GAME'; payload: { pairs: ExtendedWordPair[]; level: DifficultyLevel } }
   | { type: 'SELECT_CARD'; payload: { cardId: string; isLeftColumn: boolean } }
   | { type: 'MARK_PAIR_MATCHED'; payload: { pairId: number } }
   | { type: 'CLEAR_SELECTED_PAIR'; payload: { cardIds: string[] } }
   | { type: 'SET_ANIMATION'; payload: { type: 'match' | 'fail'; key: string | number; active: boolean } }
   | { type: 'UPDATE_TIMER'; payload: { newTime: number } }
   | { type: 'CHANGE_LEVEL'; payload: { level: DifficultyLevel } }
-  | { type: 'RESET_LEVEL'; payload: { pairs: WordPair[] } };
+  | { type: 'RESET_LEVEL'; payload: { pairs: ExtendedWordPair[] } };
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
@@ -233,18 +232,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   }
 }
 
-function shuffleArray<T>(array: T[]): T[] {
-  const newArray = [...array];
-  for (let i = newArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-  }
-  return newArray;
-}
-
-function createRandomizedPairs(unusedPairs: WordPair[]): { 
-  randomizedPairs: RandomizedPair[], 
-  remainingUnused: WordPair[] 
+function createRandomizedPairs(unusedPairs: ExtendedWordPair[]): { 
+  randomizedPairs: ExtendedWordPair[], 
+  remainingUnused: ExtendedWordPair[] 
 } {
   if (unusedPairs.length === 0) {
     return { randomizedPairs: [], remainingUnused: [] };
@@ -263,8 +253,8 @@ function createRandomizedPairs(unusedPairs: WordPair[]): {
 
   // Create all possible combinations
   const allWords = pairsToRandomize.flatMap(pair => ([
-    { id: pair.id, word: pair.german, isGerman: true, difficulty: pair.difficulty },
-    { id: pair.id, word: pair.english, isGerman: false, difficulty: pair.difficulty }
+    { id: pair.germanWordPairId, word: pair.german, isGerman: true, difficulty: pair.difficulty },
+    { id: pair.englishWordPairId, word: pair.english, isGerman: false, difficulty: pair.difficulty }
   ]));
 
   // Shuffle German and English words separately
@@ -272,21 +262,23 @@ function createRandomizedPairs(unusedPairs: WordPair[]): {
   const englishWords = shuffleArray(allWords.filter(w => !w.isGerman));
 
   // Create new pairs
-  const randomizedPairs: RandomizedPair[] = germanWords.map((german, i) => ({
+  const randomizedPairs: ExtendedWordPair[] = germanWords.map((german, i) => ({
     id: german.id,
     german: german.word,
     english: englishWords[i].word,
     difficulty: german.difficulty,
+    germanWordPairId: german.id,
+    englishWordPairId: englishWords[i].id
   }));
 
   return { randomizedPairs, remainingUnused };
 }
 
 function getNextRandomizedPair(state: GameState): {
-  randomizedPair: RandomizedPair | null,
-  currentRandomizedPairs: RandomizedPair[],
+  randomizedPair: ExtendedWordPair | null,
+  currentRandomizedPairs: ExtendedWordPair[],
   nextPairIndex: number,
-  unusedPairs: WordPair[],
+  unusedPairs: ExtendedWordPair[],
 } {
   if (state.currentRandomizedPairs.length > state.nextPairIndex) {
     return {
