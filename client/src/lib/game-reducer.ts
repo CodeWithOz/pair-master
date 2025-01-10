@@ -346,7 +346,7 @@ function getNextRandomizedPair(state: GameState): {
   return {
     randomizedPair: randomizedPairs.length > 0 ? randomizedPairs[0] : null,
     currentRandomizedPairs: randomizedPairs,
-    nextPairIndex: 0,
+    nextPairIndex: 1,
     unusedPairs: remainingUnused,
   };
 }
