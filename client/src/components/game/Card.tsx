@@ -59,7 +59,7 @@ export function Card({
   return (
     <ShadcnCard
       className={cn(
-        "flex items-center justify-center p-6 cursor-pointer min-h-[100px] rounded-[32px] border-2 border-b-4",
+        "flex items-center justify-center p-5 cursor-pointer min-h-[60px] rounded-[16px] border-2 border-b-4",
         styles.background,
         styles.ring,
         isMatched && "cursor-default",
