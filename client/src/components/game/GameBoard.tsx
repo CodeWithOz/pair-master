@@ -147,12 +147,14 @@ export function GameBoard() {
     if (!card || card.isMatched || state.selectedCards.includes(cardId)) return;
 
     const isLeftColumn = isCardInLeftColumn(cardId);
-    dispatch({
+    const selectCardAction: { type: 'SELECT_CARD', payload: { cardId: string, isLeftColumn: boolean } } = {
       type: 'SELECT_CARD',
       payload: { cardId, isLeftColumn },
-    });
+    };
+    dispatch(selectCardAction);
 
-    if ((state.selectedCards.length + 1) % 2 === 0) {
+    const nextStateAfterSelectCard = gameReducer(state, selectCardAction);
+    if (nextStateAfterSelectCard.selectedCards.length % 2 === 0) {
       const firstId = state.selectedCards[state.selectedCards.length - 1];
       const firstCard = findCardInColumns(firstId);
       const secondCard = card;
