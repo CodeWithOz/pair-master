@@ -63,7 +63,7 @@ export function Card({
         styles.background,
         styles.ring,
         isMatched && "cursor-default",
-        isMatchAnimation && "[transition:opacity_4s_1s,background-color_0.2s,border_0.2s] opacity-0",
+        isMatchAnimation && "[transition:opacity_2.5s_0.5s,background-color_0.2s,border_0.2s] opacity-0",
         isFailAnimation && "transition-transform"
       )}
       onClick={onClick}

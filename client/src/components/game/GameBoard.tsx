@@ -210,9 +210,10 @@ export function GameBoard() {
         });
 
         // Finalize this new match after transition timeout
+        const animationDuration = nextStateAfterSelectCard.progress.unusedPairs.length > 0 ? 3000 : 1000;
         const timeoutId = setTimeout(
           finalizeCardMatch,
-          5000,
+          animationDuration,
           firstCard.pairId,
           firstId,
           cardId,
