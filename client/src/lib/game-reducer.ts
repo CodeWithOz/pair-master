@@ -306,9 +306,10 @@ function createRandomizedPairs(unusedPairs: ExtendedWordPair[]): {
     },
   ]);
 
-  // Shuffle German and English words separately
-  const germanWords = shuffleArray(allWords.filter((w) => w.isGerman));
-  const englishWords = shuffleArray(allWords.filter((w) => !w.isGerman));
+  // Reverse the order of cards in one of the languages
+  const flipEnglish = Math.random() < 0.5;
+  const germanWords = flipEnglish ? allWords.filter((w) => w.isGerman) : allWords.filter((w) => w.isGerman).reverse();
+  const englishWords = flipEnglish ? allWords.filter((w) => !w.isGerman).reverse() : allWords.filter((w) => !w.isGerman);
 
   // Create new pairs
   const randomizedPairs: ExtendedWordPair[] = germanWords.map((german, i) => ({
