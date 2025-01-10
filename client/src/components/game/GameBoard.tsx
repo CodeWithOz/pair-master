@@ -139,6 +139,31 @@ export function GameBoard() {
     return state.cards.leftColumn.some((card) => card.id === cardId);
   };
 
+  const finalizeCardMatch = (pairId: number, firstCardId: string, secondCardId: string) => {
+    dispatch({
+      type: 'MARK_PAIR_MATCHED',
+      payload: { pairId: pairId },
+    });
+
+    // Remove the match animation
+    dispatch({
+      type: 'SET_ANIMATION',
+      payload: { type: 'match', key: pairId, active: false },
+    });
+
+    dispatch({
+      type: 'CLEAR_SELECTED_PAIR',
+      payload: { cardIds: [firstCardId, secondCardId] },
+    });
+
+    // Clean up the timeout reference
+    const matchKey = `match-${pairId}`;
+    if (timeoutsRef.current.has(matchKey)) {
+      clearTimeout(timeoutsRef.current.get(matchKey));
+    }
+    timeoutsRef.current.delete(matchKey);
+  };
+
   const handleCardClick = (cardId: string) => {
     if (state.progress.remainingTime <= 0 || state.progress.isComplete) return;
 
@@ -175,27 +200,23 @@ export function GameBoard() {
           clearTimeout(timeoutsRef.current.get(matchKey));
         }
 
-        // Start match transition
-        const timeoutId = setTimeout(() => {
-          dispatch({
-            type: 'MARK_PAIR_MATCHED',
-            payload: { pairId: firstCard.pairId },
-          });
+        // Immediately finalize any previous match
+        nextStateAfterSelectCard.activeMatchAnimations.forEach((pairId: number) => {
+          const firstCardId = nextStateAfterSelectCard.cards.leftColumn.find((c) => c.pairId === pairId)?.id;
+          const secondCardId = nextStateAfterSelectCard.cards.rightColumn.find((c) => c.pairId === pairId)?.id;
+          if (firstCardId && secondCardId) {
+            finalizeCardMatch(pairId, firstCardId, secondCardId);
+          }
+        });
 
-          // Remove the match animation
-          dispatch({
-            type: 'SET_ANIMATION',
-            payload: { type: 'match', key: firstCard.pairId, active: false },
-          });
-
-          dispatch({
-            type: 'CLEAR_SELECTED_PAIR',
-            payload: { cardIds: [firstId, cardId] },
-          });
-
-          // Clean up the timeout reference
-          timeoutsRef.current.delete(matchKey);
-        }, 1000);
+        // Finalize this new match after transition timeout
+        const timeoutId = setTimeout(
+          finalizeCardMatch,
+          5000,
+          firstCard.pairId,
+          firstId,
+          cardId,
+        );
 
         // Store the timeout reference
         timeoutsRef.current.set(matchKey, timeoutId);
