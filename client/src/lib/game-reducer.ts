@@ -6,7 +6,6 @@ import {
   generateGameCards,
   ExtendedWordPair,
 } from "./game-data";
-import { shuffleArray } from "./utils";
 
 // State interface
 interface GameState {
