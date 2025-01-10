@@ -23,34 +23,34 @@ export function Card({
       return {
         background: "bg-green-100",
         text: "text-green-800",
-        ring: "ring-2 ring-green-500"
+        border: "border-green-500"
       };
     }
     if (isFailAnimation) {
       return {
         background: "bg-red-100",
         text: "text-red-800",
-        ring: "ring-2 ring-red-500"
+        border: "border-red-500"
       };
     }
     if (isMatched) {
       return {
         background: "bg-gray-100",
         text: "text-gray-400",
-        ring: "ring-1 ring-gray-200"
+        border: "border-gray-200"
       };
     }
     if (isSelected && !isMatched) {
       return {
         background: "bg-blue-50",
         text: "text-blue-800",
-        ring: "ring-2 ring-blue-500"
+        border: "border-blue-500"
       };
     }
     return {
       background: "hover:bg-gray-50",
       text: "text-gray-900",
-      ring: ""
+      border: "border-gray-200"
     };
   };
 
@@ -61,9 +61,9 @@ export function Card({
       className={cn(
         "flex items-center justify-center p-5 cursor-pointer min-h-[60px] rounded-[16px] border-2 border-b-4",
         styles.background,
-        styles.ring,
+        styles.border,
         isMatched && "cursor-default",
-        isMatchAnimation && "[transition:opacity_2.5s_0.5s,background-color_0.2s,border_0.2s] opacity-0",
+        isMatchAnimation && "[transition:opacity_2.5s_0.5s,background-color_0.2s,border-color_0.2s] opacity-0",
         isFailAnimation && "transition-transform"
       )}
       onClick={onClick}
