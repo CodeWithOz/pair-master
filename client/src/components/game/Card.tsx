@@ -59,11 +59,12 @@ export function Card({
   return (
     <ShadcnCard
       className={cn(
-        "flex items-center justify-center p-6 cursor-pointer transition-all duration-200 min-h-[100px]",
+        "flex items-center justify-center p-6 cursor-pointer min-h-[100px]",
         styles.background,
         styles.ring,
         isMatched && "cursor-default",
-        (isMatchAnimation || isFailAnimation) && "transform transition-transform"
+        isMatchAnimation && "[transition:opacity_4s_1s,background-color_0.2s,border_0.2s] opacity-0",
+        isFailAnimation && "transition-transform"
       )}
       onClick={onClick}
     >
