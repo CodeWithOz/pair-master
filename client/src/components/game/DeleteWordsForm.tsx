@@ -9,37 +9,65 @@ import { WordPair } from "@/lib/game-data";
 import { cn } from "@/lib/utils";
 
 export function DeleteWordsForm() {
-  const [pairs, setPairs] = useState<(WordPair & { selected: boolean })[]>([]);
+  const [pairs, setPairs] = useState<WordPair[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [allSelected, setAllSelected] = useState(false);
+  const [exceptions, setExceptions] = useState<Set<number>>(new Set());
   const { toast } = useToast();
 
   useEffect(() => {
     const loadPairs = async () => {
       const dbPairs = await db.wordPairs.toArray();
-      setPairs(dbPairs.map(pair => ({ ...pair, selected: false })));
+      setPairs(dbPairs);
     };
     loadPairs();
   }, []);
 
   const handleSelectAll = (checked: boolean) => {
-    setPairs(pairs.map(pair => ({ ...pair, selected: checked })));
+    setAllSelected(checked);
+    setExceptions(new Set());
+    setSelectedIds(new Set());
   };
 
   const handleSelectRow = (id: number, checked: boolean) => {
-    setPairs(pairs.map(pair => 
-      pair.id === id ? { ...pair, selected: checked } : pair
-    ));
+    if (allSelected) {
+      if (!checked) {
+        setExceptions(new Set([...exceptions, id]));
+      } else {
+        const newExceptions = new Set(exceptions);
+        newExceptions.delete(id);
+        setExceptions(newExceptions);
+      }
+    } else {
+      if (checked) {
+        setSelectedIds(new Set([...selectedIds, id]));
+      } else {
+        const newSelected = new Set(selectedIds);
+        newSelected.delete(id);
+        setSelectedIds(newSelected);
+      }
+    }
   };
 
   const handleDelete = async () => {
-    const selectedIds = pairs.filter(pair => pair.selected).map(pair => pair.id);
-    if (selectedIds.length === 0) return;
-
     try {
-      await db.wordPairs.bulkDelete(selectedIds);
-      setPairs(pairs.filter(pair => !pair.selected));
+      if (allSelected && exceptions.size === 0) {
+        // Delete all records efficiently
+        await db.wordPairs.clear();
+        setPairs([]);
+      } else {
+        // Delete specific records
+        const idsToDelete = allSelected 
+          ? pairs.filter(pair => !exceptions.has(pair.id)).map(pair => pair.id)
+          : Array.from(selectedIds);
+        
+        await db.wordPairs.bulkDelete(idsToDelete);
+        setPairs(pairs.filter(pair => !idsToDelete.includes(pair.id)));
+      }
+
       toast({
         title: "Success",
-        description: `Deleted ${selectedIds.length} word pairs`,
+        description: "Successfully deleted selected word pairs",
       });
     } catch (error) {
       toast({
@@ -50,14 +78,18 @@ export function DeleteWordsForm() {
     }
   };
 
-  const anySelected = pairs.some(pair => pair.selected);
+  const isSelected = (pair: WordPair) => {
+    return allSelected ? !exceptions.has(pair.id) : selectedIds.has(pair.id);
+  };
+
+  const anySelected = allSelected || selectedIds.size > 0;
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-[auto_1fr_1fr] gap-4 items-center mb-2">
         <div className="flex items-center gap-2">
           <Checkbox 
-            checked={pairs.length > 0 && pairs.every(pair => pair.selected)}
+            checked={allSelected || (pairs.length > 0 && selectedIds.size === pairs.length)}
             onCheckedChange={handleSelectAll}
           />
           <span className="text-sm font-medium">All ({pairs.length})</span>
@@ -74,11 +106,11 @@ export function DeleteWordsForm() {
               className={cn(
                 "grid grid-cols-[auto_1fr_1fr] gap-4 items-center py-2",
                 "hover:bg-gray-50",
-                pair.selected && "bg-gray-100"
+                isSelected(pair) && "bg-gray-100"
               )}
             >
               <Checkbox 
-                checked={pair.selected}
+                checked={isSelected(pair)}
                 onCheckedChange={(checked) => handleSelectRow(pair.id, !!checked)}
               />
               <div className="text-gray-600 text-center">{pair.english}</div>
