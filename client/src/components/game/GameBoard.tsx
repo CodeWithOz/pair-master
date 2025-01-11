@@ -289,7 +289,8 @@ export function GameBoard() {
       <div className="mb-8 max-w-2xl mx-auto flex justify-between items-center">
         <Button 
           onClick={() => setLocation("/")} 
-          className="bg-white text-black hover:bg-gray-100 hover:text-black shadow-[0_0_0_1px_hsl(var(--border))]"
+          variant="ghost"
+          className="shadow-[0_0_0_1px_hsl(var(--border))]"
         >
           <Home className="h-6 w-6 inline-block mr-2"/> Home
         </Button>
