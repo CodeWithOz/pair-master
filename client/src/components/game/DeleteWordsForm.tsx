@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/db";
 import { WordPair } from "@/lib/game-data";
+import { cn } from "@/lib/utils";
 
 export function DeleteWordsForm() {
   const [pairs, setPairs] = useState<(WordPair & { selected: boolean })[]>([]);
