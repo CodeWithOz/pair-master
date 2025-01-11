@@ -66,9 +66,16 @@ export function DeleteWordsForm() {
       </div>
 
       <ScrollArea className="h-[220px] border rounded-md">
-        <div className="p-4 space-y-2">
+        <div className="p-4 divide-y divide-gray-200">
           {pairs.map((pair) => (
-            <div key={pair.id} className="grid grid-cols-[auto_1fr_1fr] gap-4 items-center">
+            <div 
+              key={pair.id} 
+              className={cn(
+                "grid grid-cols-[auto_1fr_1fr] gap-4 items-center py-2",
+                "hover:bg-gray-50",
+                pair.selected && "bg-gray-50"
+              )}
+            >
               <Checkbox 
                 checked={pair.selected}
                 onCheckedChange={(checked) => handleSelectRow(pair.id, !!checked)}
