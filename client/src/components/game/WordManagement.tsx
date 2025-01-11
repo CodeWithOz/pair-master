@@ -22,6 +22,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { db } from "@/lib/db";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const wordPairSchema = z.object({
   german: z
@@ -41,6 +43,8 @@ type WordPairForm = z.infer<typeof wordPairSchema>;
 
 export function WordManagement() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const form = useForm<WordPairForm>({
     resolver: zodResolver(wordPairSchema),
     defaultValues: {
@@ -50,12 +54,33 @@ export function WordManagement() {
     },
   });
 
+  const addWordPairMutation = useMutation({
+    mutationFn: async (data: WordPairForm) => {
+      await db.wordPairs.add({
+        german: data.german,
+        english: data.english,
+        difficulty: parseInt(data.difficulty),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/words'] });
+      toast({
+        title: "Success",
+        description: "Word pair added successfully",
+      });
+      form.reset();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add word pair. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   function onSubmit(data: WordPairForm) {
-    toast({
-      title: "Word pair submitted",
-      description: `German: ${data.german}, English: ${data.english}, Difficulty: ${data.difficulty}`,
-    });
-    form.reset();
+    addWordPairMutation.mutate(data);
   }
 
   return (
@@ -129,7 +154,12 @@ export function WordManagement() {
                       )}
                     />
 
-                    <Button type="submit">Add Word Pair</Button>
+                    <Button 
+                      type="submit" 
+                      disabled={addWordPairMutation.isPending}
+                    >
+                      {addWordPairMutation.isPending ? "Adding..." : "Add Word Pair"}
+                    </Button>
                   </form>
                 </Form>
               </CardContent>
