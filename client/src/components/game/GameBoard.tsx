@@ -285,15 +285,13 @@ export function GameBoard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-start mb-4"> {/* Added flex container for home button */}
-        <Button onClick={() => navigate("/")} className="mr-4"> {/* Added home button */}
-          <Home className="h-6 w-6 inline-block mr-2"/> Home
-        </Button>
-        <DifficultySelector
-          progress={state.progress}
-          onSelectLevel={handleLevelSelect}
-        />
-      </div>
+      <Button onClick={() => navigate("/")} className="absolute top-8 left-8"> {/* Positioned home button */}
+        <Home className="h-6 w-6 inline-block mr-2"/> Home
+      </Button>
+      <DifficultySelector
+        progress={state.progress}
+        onSelectLevel={handleLevelSelect}
+      />
       <div className="text-center mb-4">
         <div className="text-2xl font-bold">
           Time: {formatTime(state.progress.remainingTime)}
