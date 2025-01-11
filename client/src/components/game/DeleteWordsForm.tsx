@@ -74,7 +74,7 @@ export function DeleteWordsForm() {
               className={cn(
                 "grid grid-cols-[auto_1fr_1fr] gap-4 items-center py-2",
                 "hover:bg-gray-50",
-                pair.selected && "bg-gray-50"
+                pair.selected && "bg-gray-100"
               )}
             >
               <Checkbox 
