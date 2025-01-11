@@ -297,7 +297,7 @@ export function GameBoard() {
           onClick={() => setLocation("/manage-words")}
           variant="ghost"
           size="icon"
-          className="rounded-full"
+          className="rounded-full shadow-[0_0_0_1px_hsl(var(--border))]"
         >
           <Settings className="h-6 w-6" />
         </Button>
