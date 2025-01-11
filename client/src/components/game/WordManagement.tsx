@@ -1,7 +1,63 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+
+const wordPairSchema = z.object({
+  german: z
+    .string()
+    .min(1, "German word is required")
+    .regex(/^[a-zA-ZäöüßÄÖÜ\s-]*$/, "Only letters, spaces, and hyphens are allowed"),
+  english: z
+    .string()
+    .min(1, "English word is required")
+    .regex(/^[a-zA-Z\s-]*$/, "Only letters, spaces, and hyphens are allowed"),
+  difficulty: z.enum(["1", "2", "3"], {
+    required_error: "Please select a difficulty level",
+  }),
+});
+
+type WordPairForm = z.infer<typeof wordPairSchema>;
 
 export function WordManagement() {
+  const { toast } = useToast();
+  const form = useForm<WordPairForm>({
+    resolver: zodResolver(wordPairSchema),
+    defaultValues: {
+      german: "",
+      english: "",
+      difficulty: "1",
+    },
+  });
+
+  function onSubmit(data: WordPairForm) {
+    toast({
+      title: "Word pair submitted",
+      description: `German: ${data.german}, English: ${data.english}, Difficulty: ${data.difficulty}`,
+    });
+    form.reset();
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-8">Word Pair Management</h1>
@@ -17,9 +73,65 @@ export function WordManagement() {
           <TabsContent value="single">
             <Card>
               <CardContent className="pt-6">
-                <p className="text-gray-600">
-                  Form for adding a single word pair will go here.
-                </p>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="german"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>German Word</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter German word" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="english"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>English Word</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter English word" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="difficulty"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Difficulty Level</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select difficulty" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="1">Easy</SelectItem>
+                              <SelectItem value="2">Medium</SelectItem>
+                              <SelectItem value="3">Hard</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit">Add Word Pair</Button>
+                  </form>
+                </Form>
               </CardContent>
             </Card>
           </TabsContent>
