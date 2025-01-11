@@ -1,6 +1,5 @@
-
 import { Card } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "wouter";
 
 const languages = [
   { code: "de", name: "German", flag: "🇩🇪" },
@@ -9,7 +8,7 @@ const languages = [
 ];
 
 export function LanguageSelector() {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -19,7 +18,7 @@ export function LanguageSelector() {
           <Card
             key={lang.code}
             className="p-6 hover:bg-gray-50 cursor-pointer"
-            onClick={() => navigate(`/${lang.code}/play`)}
+            onClick={() => setLocation(`/${lang.code}/play`)}
           >
             <h2 className="text-lg font-semibold">{lang.flag} {lang.name} {lang.flag}</h2>
             <p className="text-sm text-gray-600">Learn {lang.name} with English pairs</p>

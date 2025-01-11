@@ -1,7 +1,7 @@
-
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Switch, Route } from "wouter";
 import { GameBoard } from "./components/game/GameBoard";
 import { Home } from "./components/game/Home";
+import { WordManagement } from "./components/game/WordManagement";
 import { initializeDatabase } from "./lib/db";
 import { wordPairs } from "./lib/game-data";
 
@@ -11,13 +11,14 @@ initializeDatabase(wordPairs);
 function App() {
   return (
     <div className="min-h-screen bg-background">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/:language/play" element={<GameBoard />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/:language/play" component={GameBoard} />
+        <Route path="/manage-words" component={WordManagement} />
+        <Route path="*">
+          <Home />
+        </Route>
+      </Switch>
     </div>
   );
 }

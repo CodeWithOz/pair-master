@@ -1,7 +1,7 @@
 import { useReducer, useEffect, useRef, useCallback } from "react";
 import { Card } from "./Card";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "wouter";
 import { Home } from "lucide-react";
 import {
   type GameCard,
@@ -12,6 +12,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { DifficultySelector } from "./DifficultySelector";
 import { gameReducer } from "@/lib/game-reducer";
+import { Settings } from "lucide-react";
 
 // Initial state
 const initialState = {
@@ -38,7 +39,7 @@ export function GameBoard() {
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const { toast } = useToast();
   const timeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -285,12 +286,20 @@ export function GameBoard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8 max-w-2xl mx-auto">
+      <div className="mb-8 max-w-2xl mx-auto flex justify-between items-center">
         <Button 
-          onClick={() => navigate("/")} 
+          onClick={() => setLocation("/")} 
           className="bg-white text-black hover:bg-gray-100 hover:text-black shadow-[0_0_0_1px_hsl(var(--border))]"
         >
           <Home className="h-6 w-6 inline-block mr-2"/> Home
+        </Button>
+        <Button
+          onClick={() => setLocation("/manage-words")}
+          variant="ghost"
+          size="icon"
+          className="rounded-full"
+        >
+          <Settings className="h-6 w-6" />
         </Button>
       </div>
       <DifficultySelector
