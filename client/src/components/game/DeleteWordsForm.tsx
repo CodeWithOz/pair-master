@@ -32,7 +32,7 @@ export function DeleteWordsForm() {
   const handleSelectRow = (id: number, checked: boolean) => {
     if (allSelected) {
       if (!checked) {
-        setExceptions(new Set([...exceptions, id]));
+        setExceptions(new Set([...Array.from(exceptions), id]));
       } else {
         const newExceptions = new Set(exceptions);
         newExceptions.delete(id);
@@ -40,7 +40,7 @@ export function DeleteWordsForm() {
       }
     } else {
       if (checked) {
-        setSelectedIds(new Set([...selectedIds, id]));
+        setSelectedIds(new Set([...Array.from(selectedIds), id]));
       } else {
         const newSelected = new Set(selectedIds);
         newSelected.delete(id);
@@ -89,7 +89,7 @@ export function DeleteWordsForm() {
       <div className="grid grid-cols-[auto_1fr_1fr] gap-4 items-center mb-2">
         <div className="flex items-center gap-2">
           <Checkbox 
-            checked={allSelected || (pairs.length > 0 && selectedIds.size === pairs.length)}
+            checked={(allSelected && exceptions.size === 0) || (pairs.length > 0 && selectedIds.size === pairs.length)}
             onCheckedChange={handleSelectAll}
           />
           <span className="text-sm font-medium">All ({pairs.length})</span>
