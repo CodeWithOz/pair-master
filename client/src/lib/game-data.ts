@@ -128,7 +128,13 @@ export function canUnlockNextLevel(progress: GameProgress): boolean {
 
 export async function getWordPairsForLevel(level: DifficultyLevel): Promise<WordPair[]> {
   const db = (await import('./db')).db;
-  return await db.wordPairs.where('difficulty').equals(level).toArray();
+  const requiredPairs = difficultySettings[level].requiredPairs;
+  return await db.wordPairs
+    .where('difficulty')
+    .equals(level)
+    .reverse()
+    .limit(requiredPairs)
+    .toArray();
 }
 
 export async function getInitialShuffledPairs(level: DifficultyLevel): Promise<ExtendedWordPair[]> {
