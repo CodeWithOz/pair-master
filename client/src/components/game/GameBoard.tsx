@@ -285,7 +285,7 @@ export function GameBoard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
+      <div className="mb-8 max-w-2xl mx-auto">
         <Button 
           onClick={() => navigate("/")} 
           className="bg-white text-black hover:bg-gray-100 hover:text-black"
