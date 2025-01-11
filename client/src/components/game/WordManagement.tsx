@@ -22,6 +22,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { Home } from "lucide-react";
+import { useLocation } from "wouter";
+import { db } from "@/lib/db";
 
 const wordPairSchema = z.object({
   german: z
@@ -50,16 +53,41 @@ export function WordManagement() {
     },
   });
 
-  function onSubmit(data: WordPairForm) {
-    toast({
-      title: "Word pair submitted",
-      description: `German: ${data.german}, English: ${data.english}, Difficulty: ${data.difficulty}`,
-    });
-    form.reset();
+  const [, setLocation] = useLocation();
+
+  async function onSubmit(data: WordPairForm) {
+    try {
+      await db.wordPairs.add({
+        german: data.german,
+        english: data.english,
+        difficulty: parseInt(data.difficulty),
+      });
+      
+      toast({
+        title: "Word pair added",
+        description: "Successfully saved to database",
+      });
+      form.reset();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save word pair",
+        variant: "destructive",
+      });
+    }
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <div className="mb-8 max-w-4xl mx-auto flex justify-between items-center">
+        <Button 
+          onClick={() => setLocation("/")} 
+          variant="ghost"
+          className="shadow-[0_0_0_1px_hsl(var(--border))]"
+        >
+          <Home className="h-6 w-6 inline-block mr-2"/> Home
+        </Button>
+      </div>
       <h1 className="text-2xl font-bold mb-8">Word Pair Management</h1>
 
       <div className="max-w-4xl mx-auto">
