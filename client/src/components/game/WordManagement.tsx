@@ -2,7 +2,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -59,9 +58,10 @@ export function WordManagement() {
 
     setIsSubmitting(true);
     try {
+      // Add the word pair to the Dexie database
       await db.wordPairs.add({
-        german: data.german,
-        english: data.english,
+        german: data.german.trim(),
+        english: data.english.trim(),
         difficulty: parseInt(data.difficulty),
       });
 
@@ -69,7 +69,13 @@ export function WordManagement() {
         title: "Success",
         description: "Word pair added successfully",
       });
-      form.reset();
+
+      // Reset the form after successful submission
+      form.reset({
+        german: "",
+        english: "",
+        difficulty: "1",
+      });
     } catch (error) {
       console.error('Error adding word pair:', error);
       toast({

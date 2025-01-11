@@ -2,8 +2,11 @@ import Dexie, { Table } from 'dexie';
 import { WordPair } from './game-data';
 
 // Define the database schema type
-type WordPairTable = Omit<WordPair, 'id'> & {
+type WordPairTable = {
   id?: number;
+  german: string;
+  english: string;
+  difficulty: number;
 };
 
 export class WordDatabase extends Dexie {
@@ -21,10 +24,14 @@ export const db = new WordDatabase();
 
 // Initialize database with default words if empty
 export async function initializeDatabase(defaultPairs: WordPair[]) {
-  const count = await db.wordPairs.count();
-  if (count === 0) {
-    // Remove ids when adding to let Dexie handle id generation
-    const pairsWithoutIds = defaultPairs.map(({ id, ...rest }) => rest);
-    await db.wordPairs.bulkAdd(pairsWithoutIds);
+  try {
+    const count = await db.wordPairs.count();
+    if (count === 0) {
+      // Remove ids when adding to let Dexie handle id generation
+      const pairsWithoutIds = defaultPairs.map(({ id, ...rest }) => rest);
+      await db.wordPairs.bulkAdd(pairsWithoutIds);
+    }
+  } catch (error) {
+    console.error('Error initializing database:', error);
   }
 }
