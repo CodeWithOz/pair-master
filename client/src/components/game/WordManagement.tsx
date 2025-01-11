@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Home } from "lucide-react";
 import { useLocation } from "wouter";
 import { db } from "@/lib/db";
+import { BulkImportForm } from "./BulkImportForm";
 
 const wordPairSchema = z.object({
   german: z
@@ -167,9 +168,7 @@ export function WordManagement() {
           <TabsContent value="bulk">
             <Card>
               <CardContent className="pt-6">
-                <p className="text-gray-600">
-                  Bulk import interface will go here.
-                </p>
+                <BulkImportForm />
               </CardContent>
             </Card>
           </TabsContent>
