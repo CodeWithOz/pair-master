@@ -26,6 +26,7 @@ import { Home } from "lucide-react";
 import { useLocation } from "wouter";
 import { db } from "@/lib/db";
 import { BulkImportForm } from "./BulkImportForm";
+import { DeleteWordsForm } from "./DeleteWordsForm";
 
 const wordPairSchema = z.object({
   german: z
@@ -176,9 +177,7 @@ export function WordManagement() {
           <TabsContent value="delete">
             <Card>
               <CardContent className="pt-6">
-                <p className="text-gray-600">
-                  Word deletion interface will go here.
-                </p>
+                <DeleteWordsForm />
               </CardContent>
             </Card>
           </TabsContent>
