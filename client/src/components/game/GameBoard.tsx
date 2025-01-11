@@ -285,9 +285,14 @@ export function GameBoard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Button onClick={() => navigate("/")} className="absolute top-8 left-8"> {/* Positioned home button */}
-        <Home className="h-6 w-6 inline-block mr-2"/> Home
-      </Button>
+      <div className="mb-8">
+        <Button 
+          onClick={() => navigate("/")} 
+          className="bg-white text-black hover:bg-gray-100 hover:text-black"
+        >
+          <Home className="h-6 w-6 inline-block mr-2"/> Home
+        </Button>
+      </div>
       <DifficultySelector
         progress={state.progress}
         onSelectLevel={handleLevelSelect}
