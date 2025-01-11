@@ -5,14 +5,11 @@ import { WordManagement } from "./components/game/WordManagement";
 import { initializeDatabase } from "./lib/db";
 import { wordPairs } from "./lib/game-data";
 import { Toaster } from "@/components/ui/toaster";
-import { useEffect } from "react";
+
+// Initialize database with default words
+initializeDatabase(wordPairs);
 
 function App() {
-  // Initialize database when the app loads
-  useEffect(() => {
-    initializeDatabase(wordPairs).catch(console.error);
-  }, []);
-
   return (
     <div className="min-h-screen bg-background">
       <Switch>

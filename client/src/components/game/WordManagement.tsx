@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -21,8 +22,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { db } from "@/lib/db";
-import { useState } from "react";
 
 const wordPairSchema = z.object({
   german: z
@@ -42,8 +41,6 @@ type WordPairForm = z.infer<typeof wordPairSchema>;
 
 export function WordManagement() {
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const form = useForm<WordPairForm>({
     resolver: zodResolver(wordPairSchema),
     defaultValues: {
@@ -53,39 +50,12 @@ export function WordManagement() {
     },
   });
 
-  async function onSubmit(data: WordPairForm) {
-    if (isSubmitting) return;
-
-    setIsSubmitting(true);
-    try {
-      // Add the word pair to the Dexie database
-      await db.wordPairs.add({
-        german: data.german.trim(),
-        english: data.english.trim(),
-        difficulty: parseInt(data.difficulty),
-      });
-
-      toast({
-        title: "Success",
-        description: "Word pair added successfully",
-      });
-
-      // Reset the form after successful submission
-      form.reset({
-        german: "",
-        english: "",
-        difficulty: "1",
-      });
-    } catch (error) {
-      console.error('Error adding word pair:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add word pair. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  function onSubmit(data: WordPairForm) {
+    toast({
+      title: "Word pair submitted",
+      description: `German: ${data.german}, English: ${data.english}, Difficulty: ${data.difficulty}`,
+    });
+    form.reset();
   }
 
   return (
@@ -159,12 +129,7 @@ export function WordManagement() {
                       )}
                     />
 
-                    <Button 
-                      type="submit" 
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? "Adding..." : "Add Word Pair"}
-                    </Button>
+                    <Button type="submit">Add Word Pair</Button>
                   </form>
                 </Form>
               </CardContent>

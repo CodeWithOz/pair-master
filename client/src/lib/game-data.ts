@@ -109,7 +109,7 @@ export interface GameProgress {
   matchedPairsInLevel: number;
   remainingTime: number;
   isComplete: boolean;
-  unusedPairs: ExtendedWordPair[];
+  unusedPairs: ExtendedWordPair[]; // Added state to track unused pairs
 }
 
 export function isLevelUnlocked(progress: GameProgress, level: DifficultyLevel): boolean {
@@ -128,9 +128,7 @@ export function canUnlockNextLevel(progress: GameProgress): boolean {
 
 export async function getWordPairsForLevel(level: DifficultyLevel): Promise<WordPair[]> {
   const db = (await import('./db')).db;
-  const pairs = await db.wordPairs.where('difficulty').equals(level).toArray();
-  // Assert the type since we know Dexie will provide IDs
-  return pairs as WordPair[];
+  return await db.wordPairs.where('difficulty').equals(level).toArray();
 }
 
 export async function getInitialShuffledPairs(level: DifficultyLevel): Promise<ExtendedWordPair[]> {
@@ -145,11 +143,14 @@ export function generateGameCards(
   availablePairs: ExtendedWordPair[],
   displayCount: number = difficultySettings[level].displayedPairs
 ): { leftColumn: GameCard[], rightColumn: GameCard[] } {
+  // Take the first n pairs sequentially from available pairs
   const selectedPairs = availablePairs.slice(0, displayCount);
+
   const leftCards: GameCard[] = [];
   const rightCards: GameCard[] = [];
 
   selectedPairs.forEach(pair => {
+    // Add timestamp to ensure unique IDs even for the same pair
     const timestamp = Date.now();
     leftCards.push({
       id: `en-${pair.id}-${timestamp}`,

@@ -289,8 +289,7 @@ export function GameBoard() {
       <div className="mb-8 max-w-2xl mx-auto flex justify-between items-center">
         <Button 
           onClick={() => setLocation("/")} 
-          variant="ghost"
-          className="shadow-[0_0_0_1px_hsl(var(--border))]"
+          className="bg-white text-black hover:bg-gray-100 hover:text-black shadow-[0_0_0_1px_hsl(var(--border))]"
         >
           <Home className="h-6 w-6 inline-block mr-2"/> Home
         </Button>
@@ -298,7 +297,7 @@ export function GameBoard() {
           onClick={() => setLocation("/manage-words")}
           variant="ghost"
           size="icon"
-          className="rounded-full shadow-[0_0_0_1px_hsl(var(--border))]"
+          className="rounded-full"
         >
           <Settings className="h-6 w-6" />
         </Button>
