@@ -1,6 +1,8 @@
 import { useReducer, useEffect, useRef, useCallback } from "react";
 import { Card } from "./Card";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { Home } from "lucide-react";
 import {
   type GameCard,
   type DifficultyLevel,
@@ -36,6 +38,7 @@ export function GameBoard() {
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const { toast } = useToast();
   const timeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const navigate = useNavigate();
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -282,10 +285,15 @@ export function GameBoard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <DifficultySelector
-        progress={state.progress}
-        onSelectLevel={handleLevelSelect}
-      />
+      <div className="flex justify-start mb-4"> {/* Added flex container for home button */}
+        <Button onClick={() => navigate("/")} className="mr-4"> {/* Added home button */}
+          <Home className="h-6 w-6 inline-block mr-2"/> Home
+        </Button>
+        <DifficultySelector
+          progress={state.progress}
+          onSelectLevel={handleLevelSelect}
+        />
+      </div>
       <div className="text-center mb-4">
         <div className="text-2xl font-bold">
           Time: {formatTime(state.progress.remainingTime)}
