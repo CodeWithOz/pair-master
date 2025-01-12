@@ -19,6 +19,9 @@ interface GameState {
   activeFailAnimations: Set<string>;
   currentRandomizedPairs: ExtendedWordPair[];
   nextPairIndex: number;
+  currentRound: number;
+  isRoundComplete: boolean;
+  isFinalRound: boolean;
 }
 
 // Action types

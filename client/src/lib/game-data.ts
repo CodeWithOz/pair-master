@@ -22,10 +22,36 @@ export const difficultyLevels = {
 export type DifficultyLevel = keyof typeof difficultyLevels;
 
 export const difficultySettings = {
-  1: { timeLimit: 180, requiredPairs: 15, displayedPairs: 5 }, // 3:00 minutes
-  2: { timeLimit: 150, requiredPairs: 20, displayedPairs: 5 }, // 2:30 minutes
-  3: { timeLimit: 120, requiredPairs: 25, displayedPairs: 5 }  // 2:00 minutes
+  1: { 
+    timeLimit: 180, // 3:00 minutes
+    rounds: [
+      { requiredPairs: 5, displayedPairs: 5 },
+      { requiredPairs: 5, displayedPairs: 5 },
+      { requiredPairs: 5, displayedPairs: 5 }
+    ]
+  },
+  2: { 
+    timeLimit: 150, // 2:30 minutes
+    rounds: [
+      { requiredPairs: 5, displayedPairs: 5 },
+      { requiredPairs: 7, displayedPairs: 5 },
+      { requiredPairs: 8, displayedPairs: 5 }
+    ]
+  },
+  3: { 
+    timeLimit: 120, // 2:00 minutes
+    rounds: [
+      { requiredPairs: 7, displayedPairs: 5 },
+      { requiredPairs: 8, displayedPairs: 5 },
+      { requiredPairs: 10, displayedPairs: 5 }
+    ]
+  }
 } as const;
+
+export interface GameRound {
+  requiredPairs: number;
+  displayedPairs: number;
+}
 
 export const wordPairs: WordPair[] = [
   // Beginner (Level 1) - 15 pairs
