@@ -3,13 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -27,6 +20,7 @@ import { useLocation } from "wouter";
 import { db } from "@/lib/db";
 import { BulkImportForm } from "./BulkImportForm";
 import { DeleteWordsForm } from "./DeleteWordsForm";
+import { CreateWordPair } from "@/lib/game-data";
 
 const wordPairSchema = z.object({
   german: z
@@ -37,34 +31,28 @@ const wordPairSchema = z.object({
     .string()
     .min(1, "English word is required")
     .regex(/^[a-zA-Z\s-]*$/, "Only letters, spaces, and hyphens are allowed"),
-  difficulty: z.enum(["1", "2", "3"], {
-    required_error: "Please select a difficulty level",
-  }),
 });
-
-type WordPairForm = z.infer<typeof wordPairSchema>;
 
 export function WordManagement() {
   const { toast } = useToast();
-  const form = useForm<WordPairForm>({
+  const form = useForm<z.infer<typeof wordPairSchema>>({
     resolver: zodResolver(wordPairSchema),
     defaultValues: {
       german: "",
       english: "",
-      difficulty: "1",
     },
   });
 
   const [, setLocation] = useLocation();
 
-  async function onSubmit(data: WordPairForm) {
+  async function onSubmit(data: z.infer<typeof wordPairSchema>) {
     try {
-      await db.wordPairs.add({
+      const wordPair: CreateWordPair = {
         german: data.german,
         english: data.english,
-        difficulty: parseInt(data.difficulty),
-      });
-      
+      };
+      await db.addWordPair(wordPair);
+
       toast({
         title: "Word pair added",
         description: "Successfully saved to database",
@@ -128,32 +116,6 @@ export function WordManagement() {
                           <FormControl>
                             <Input placeholder="Enter English word" {...field} />
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="difficulty"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Difficulty Level</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select difficulty" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="1">Easy</SelectItem>
-                              <SelectItem value="2">Medium</SelectItem>
-                              <SelectItem value="3">Hard</SelectItem>
-                            </SelectContent>
-                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}

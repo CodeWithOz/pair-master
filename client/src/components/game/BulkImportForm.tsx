@@ -1,18 +1,18 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Minus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/db";
+import { CreateWordPair } from "@/lib/game-data";
 
-interface WordPair {
+interface FormWordPair {
   english: string;
   german: string;
 }
 
 export function BulkImportForm() {
-  const [pairs, setPairs] = useState<WordPair[]>([{ english: "", german: "" }]);
+  const [pairs, setPairs] = useState<FormWordPair[]>([{ english: "", german: "" }]);
   const { toast } = useToast();
 
   const isValid = pairs.every(pair => 
@@ -34,7 +34,7 @@ export function BulkImportForm() {
     }
   };
 
-  const handleChange = (index: number, field: keyof WordPair, value: string) => {
+  const handleChange = (index: number, field: keyof FormWordPair, value: string) => {
     const newPairs = pairs.map((pair, i) => {
       if (i === index) {
         return { ...pair, [field]: value };
@@ -49,14 +49,13 @@ export function BulkImportForm() {
     if (!isValid) return;
 
     try {
-      await db.wordPairs.bulkAdd(
-        pairs.map(pair => ({
-          english: pair.english.trim(),
-          german: pair.german.trim(),
-          difficulty: 1
-        }))
-      );
-      
+      const wordPairs: CreateWordPair[] = pairs.map(pair => ({
+        english: pair.english.trim(),
+        german: pair.german.trim(),
+      }));
+
+      await db.addWordPairs(wordPairs);
+
       toast({
         title: "Success",
         description: `Added ${pairs.length} word pairs to the database`,
@@ -77,7 +76,7 @@ export function BulkImportForm() {
         <div className="font-medium text-center">English</div>
         <div className="font-medium text-center">German</div>
         <div className="w-20"></div>
-        
+
         {pairs.map((pair, index) => (
           <div key={index} className="contents">
             <Input 
