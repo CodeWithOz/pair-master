@@ -7,6 +7,13 @@ import {
   ExtendedWordPair,
 } from "./game-data";
 
+// Round size configuration per level
+const roundSizes: Record<DifficultyLevel, number[]> = {
+  1: [5, 5, 5],
+  2: [5, 7, 8],
+  3: [7, 8, 10],
+};
+
 // State interface
 interface GameState {
   cards: {
@@ -14,11 +21,16 @@ interface GameState {
     rightColumn: GameCard[];
   };
   selectedCards: string[];
-  progress: GameProgress;
+  progress: GameProgress & {
+    currentRound: number;
+    showRoundTransition: boolean;
+    isPaused: boolean;
+  };
   activeMatchAnimations: Set<number>;
   activeFailAnimations: Set<string>;
   currentRandomizedPairs: ExtendedWordPair[];
   nextPairIndex: number;
+  wordChunks: ExtendedWordPair[][];
 }
 
 // Action types
@@ -40,47 +52,58 @@ type GameAction =
     }
   | { type: "UPDATE_TIMER"; payload: { newTime: number } }
   | { type: "CHANGE_LEVEL"; payload: { level: DifficultyLevel } }
-  | { type: "RESET_LEVEL"; payload: { pairs: ExtendedWordPair[] } };
+  | { type: "RESET_LEVEL"; payload: { pairs: ExtendedWordPair[] } }
+  | { type: "START_NEXT_ROUND" };
+
+function createWordChunks(pairs: ExtendedWordPair[], level: DifficultyLevel): ExtendedWordPair[][] {
+  const sizes = roundSizes[level];
+  const chunks: ExtendedWordPair[][] = [];
+  let startIndex = 0;
+
+  for (const size of sizes) {
+    chunks.push(pairs.slice(startIndex, startIndex + size));
+    startIndex += size;
+  }
+
+  return chunks;
+}
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case "INITIALIZE_GAME": {
       const { pairs, level } = action.payload;
-      const settings = difficultySettings[level];
-      const displayCount = settings.displayedPairs;
-
-      // Split pairs into displayed and unused
-      const displayedPairs = pairs.slice(0, displayCount);
-      const remainingPairs = pairs.slice(displayCount);
-
-      // Initialize randomized pairs
-      const { randomizedPairs, remainingUnused } =
-        createRandomizedPairs(remainingPairs);
+      const wordChunks = createWordChunks(pairs, level);
+      const currentRoundPairs = wordChunks[0];
 
       return {
         ...state,
-        cards: generateGameCards(level, displayedPairs),
+        cards: generateGameCards(level, currentRoundPairs),
         progress: {
           ...state.progress,
           currentLevel: level,
           matchedPairsInLevel: 0,
-          remainingTime: settings.timeLimit,
+          remainingTime: difficultySettings[level].timeLimit,
           isComplete: false,
-          unusedPairs: remainingUnused,
+          unusedPairs: [],
+          currentRound: 1,
+          showRoundTransition: false,
+          isPaused: false,
         },
         selectedCards: [],
         activeMatchAnimations: new Set(),
         activeFailAnimations: new Set(),
-        currentRandomizedPairs: randomizedPairs,
+        currentRandomizedPairs: [],
         nextPairIndex: 0,
+        wordChunks,
       };
     }
 
     case "SELECT_CARD": {
+      if (state.progress.isPaused) return state;
+
       const { cardId, isLeftColumn } = action.payload;
       let newSelected = [...state.selectedCards];
 
-      // If clicking in same column as an existing selection, replace that selection
       if (state.selectedCards.length % 2 === 1) {
         const lastSelectedCard = [
           ...state.cards.leftColumn,
@@ -110,10 +133,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case "MARK_PAIR_MATCHED": {
       const { pairId } = action.payload;
-      const settings = difficultySettings[state.progress.currentLevel];
+      const currentRoundSize = roundSizes[state.progress.currentLevel][state.progress.currentRound - 1];
+      const newMatchedPairs = state.progress.matchedPairsInLevel + 1;
+      const roundComplete = newMatchedPairs >= currentRoundSize;
+      const isLastRound = state.progress.currentRound === 3;
 
       // Update cards state
-      let updatedCards = {
+      const updatedCards = {
         leftColumn: state.cards.leftColumn.map((card) =>
           card.pairId === pairId ? { ...card, isMatched: true } : card,
         ),
@@ -122,50 +148,39 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ),
       };
 
-      // Get next pair from randomized pairs or create new ones
-      const {
-        randomizedPair: nextPair,
-        currentRandomizedPairs,
-        nextPairIndex,
-        unusedPairs,
-      } = getNextRandomizedPair(state);
-      if (nextPair) {
-        const newCards = generateGameCards(
-          state.progress.currentLevel,
-          [nextPair],
-          1,
-        );
-        updatedCards = {
-          leftColumn: updatedCards.leftColumn.map((card) =>
-            card.isMatched && card.pairId === pairId
-              ? newCards.leftColumn[0]
-              : card,
-          ),
-          rightColumn: updatedCards.rightColumn.map((card) =>
-            card.isMatched && card.pairId === pairId
-              ? newCards.rightColumn[0]
-              : card,
-          ),
-        };
-      }
-
-      const newMatchedPairs = state.progress.matchedPairsInLevel + 1;
-      const levelComplete = newMatchedPairs >= settings.requiredPairs;
-
       return {
         ...state,
         cards: updatedCards,
         progress: {
           ...state.progress,
           matchedPairsInLevel: newMatchedPairs,
-          isComplete: levelComplete,
-          unusedPairs,
-          highestUnlockedLevel: levelComplete
+          isComplete: roundComplete && isLastRound,
+          showRoundTransition: roundComplete && !isLastRound,
+          isPaused: roundComplete,
+          highestUnlockedLevel: roundComplete && isLastRound
             ? (Math.min(state.progress.currentLevel + 1, 3) as DifficultyLevel)
             : state.progress.highestUnlockedLevel,
         },
-        currentRandomizedPairs,
-        nextPairIndex,
+      };
+    }
+
+    case "START_NEXT_ROUND": {
+      const nextRound = state.progress.currentRound + 1;
+      const nextRoundPairs = state.wordChunks[nextRound - 1];
+
+      return {
+        ...state,
+        cards: generateGameCards(state.progress.currentLevel, nextRoundPairs),
+        progress: {
+          ...state.progress,
+          currentRound: nextRound,
+          showRoundTransition: false,
+          isPaused: false,
+          matchedPairsInLevel: 0, // Reset matched pairs for the new round.
+        },
+        selectedCards: [],
+        activeMatchAnimations: new Set(),
+        activeFailAnimations: new Set(),
       };
     }
 
@@ -207,6 +222,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case "UPDATE_TIMER": {
+      if (state.progress.isPaused) return state;
+
       return {
         ...state,
         progress: {
@@ -226,127 +243,44 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           matchedPairsInLevel: 0,
           remainingTime: difficultySettings[level].timeLimit,
           isComplete: false,
-          unusedPairs: [], // Will be populated when game is initialized
+          unusedPairs: [],
+          currentRound: 1,
+          showRoundTransition: false,
+          isPaused: false,
         },
         selectedCards: [],
         activeMatchAnimations: new Set(),
         activeFailAnimations: new Set(),
+        wordChunks: [],
       };
     }
 
     case "RESET_LEVEL": {
       const { pairs } = action.payload;
-      const settings = difficultySettings[state.progress.currentLevel];
-      const displayCount = settings.displayedPairs;
-
-      // Split pairs into displayed and unused
-      const displayedPairs = pairs.slice(0, displayCount);
-      const remainingPairs = pairs.slice(displayCount);
-
-      // Initialize randomized pairs
-      const { randomizedPairs, remainingUnused } =
-        createRandomizedPairs(remainingPairs);
+      const wordChunks = createWordChunks(pairs, state.progress.currentLevel);
+      const currentRoundPairs = wordChunks[0];
 
       return {
         ...state,
-        cards: generateGameCards(state.progress.currentLevel, displayedPairs),
+        cards: generateGameCards(state.progress.currentLevel, currentRoundPairs),
         progress: {
           ...state.progress,
           matchedPairsInLevel: 0,
-          remainingTime: settings.timeLimit,
+          remainingTime: difficultySettings[state.progress.currentLevel].timeLimit,
           isComplete: false,
-          unusedPairs: remainingUnused,
+          unusedPairs: [],
+          currentRound: 1,
+          showRoundTransition: false,
+          isPaused: false,
         },
         selectedCards: [],
         activeMatchAnimations: new Set(),
         activeFailAnimations: new Set(),
-        currentRandomizedPairs: randomizedPairs,
-        nextPairIndex: 0,
+        wordChunks,
       };
     }
 
     default:
       return state;
   }
-}
-
-function createRandomizedPairs(unusedPairs: ExtendedWordPair[]): {
-  randomizedPairs: ExtendedWordPair[];
-  remainingUnused: ExtendedWordPair[];
-} {
-  if (unusedPairs.length === 0) {
-    return { randomizedPairs: [], remainingUnused: [] };
-  }
-
-  if (unusedPairs.length === 1) {
-    return {
-      randomizedPairs: [unusedPairs[0]],
-      remainingUnused: unusedPairs.slice(1),
-    };
-  }
-
-  // Take first two pairs
-  const pairsToRandomize = unusedPairs.slice(0, 2);
-  const remainingUnused = unusedPairs.slice(2);
-
-  // Create all possible combinations
-  const allWords = pairsToRandomize.flatMap((pair) => [
-    {
-      id: pair.germanWordPairId,
-      word: pair.german,
-      isGerman: true,
-      difficulty: pair.difficulty,
-    },
-    {
-      id: pair.englishWordPairId,
-      word: pair.english,
-      isGerman: false,
-      difficulty: pair.difficulty,
-    },
-  ]);
-
-  // Reverse the order of cards in one of the languages
-  const flipEnglish = Math.random() < 0.5;
-  const germanWords = flipEnglish ? allWords.filter((w) => w.isGerman) : allWords.filter((w) => w.isGerman).reverse();
-  const englishWords = flipEnglish ? allWords.filter((w) => !w.isGerman).reverse() : allWords.filter((w) => !w.isGerman);
-
-  // Create new pairs
-  const randomizedPairs: ExtendedWordPair[] = germanWords.map((german, i) => ({
-    id: german.id,
-    german: german.word,
-    english: englishWords[i].word,
-    difficulty: german.difficulty,
-    germanWordPairId: german.id,
-    englishWordPairId: englishWords[i].id,
-  }));
-
-  return { randomizedPairs, remainingUnused };
-}
-
-function getNextRandomizedPair(state: GameState): {
-  randomizedPair: ExtendedWordPair | null;
-  currentRandomizedPairs: ExtendedWordPair[];
-  nextPairIndex: number;
-  unusedPairs: ExtendedWordPair[];
-} {
-  if (state.currentRandomizedPairs.length > state.nextPairIndex) {
-    return {
-      randomizedPair: state.currentRandomizedPairs[state.nextPairIndex],
-      currentRandomizedPairs: state.currentRandomizedPairs,
-      nextPairIndex: state.nextPairIndex + 1,
-      unusedPairs: state.progress.unusedPairs,
-    };
-  }
-
-  // Create new randomized pairs
-  const { randomizedPairs, remainingUnused } = createRandomizedPairs(
-    state.progress.unusedPairs,
-  );
-
-  return {
-    randomizedPair: randomizedPairs.length > 0 ? randomizedPairs[0] : null,
-    currentRandomizedPairs: randomizedPairs,
-    nextPairIndex: 1,
-    unusedPairs: remainingUnused,
-  };
 }
