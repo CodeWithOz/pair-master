@@ -33,9 +33,6 @@ const initialState = {
   activeFailAnimations: new Set<string>(),
   currentRandomizedPairs: [],
   nextPairIndex: 0,
-  currentRound: 0,
-  isRoundComplete: false,
-  isFinalRound: false,
 };
 
 export function GameBoard() {
@@ -348,24 +345,8 @@ export function GameBoard() {
         </div>
       </div>
       <div className="flex justify-center gap-4">
-        <Button onClick={() => state.isRoundComplete ? continueToNextRound() : resetGame()}>
-          {state.isRoundComplete ? "Continue" : "Reset Level"}
-        </Button>
+        <Button onClick={() => resetGame()}>Reset Level</Button>
       </div>
-      {state.isRoundComplete && (
-        <RoundOverlay isFinalRound={state.isFinalRound} />
-      )}
     </div>
   );
 }
-
-const RoundOverlay = ({ isFinalRound }: { isFinalRound: boolean }) => (
-  <div className="fixed inset-0 bg-white/90 flex flex-col items-center justify-center z-50">
-    <h2 className="text-3xl font-bold text-green-600 mb-2">
-      {isFinalRound ? "Congratulations!" : "Nice work so far!"}
-    </h2>
-    <p className="text-xl text-gray-900">
-      {isFinalRound ? "You beat this level!" : "Ready to continue?"}
-    </p>
-  </div>
-);
