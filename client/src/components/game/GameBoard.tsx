@@ -28,6 +28,7 @@ const initialState = {
     remainingTime: difficultySettings[1].timeLimit,
     isComplete: false,
     unusedPairs: [],
+    levelPairs: [],
     currentRound: 1,
     roundMatchedPairs: 0,
     showRoundTransition: false,

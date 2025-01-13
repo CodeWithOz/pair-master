@@ -124,6 +124,7 @@ export interface GameProgress {
   remainingTime: number;
   isComplete: boolean;
   unusedPairs: ExtendedWordPair[];
+  levelPairs: ExtendedWordPair[];
   currentRound: number;
   roundMatchedPairs: number;
   showRoundTransition: boolean;
@@ -148,6 +149,7 @@ export async function getWordPairsForLevel(level: DifficultyLevel): Promise<Word
   return await db.wordPairs
     .where('difficulty')
     .equals(level)
+    .reverse()
     .limit(requiredPairs)
     .toArray();
 }

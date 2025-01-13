@@ -54,8 +54,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const displayCount = settings.displayedPairs;
 
       // Split pairs into displayed and unused
-      const displayedPairs = pairs.slice(0, displayCount);
-      const remainingPairs = pairs.slice(displayCount);
+      const currentRound = 1;
+      const roundPairs = pairs.slice(0, getCurrentRoundPairs(level, currentRound));
+      const displayedPairs = roundPairs.slice(0, displayCount);
+      const remainingPairs = roundPairs.slice(displayCount);
 
       // Initialize randomized pairs
       const { randomizedPairs, remainingUnused } =
@@ -69,10 +71,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           currentLevel: level,
           matchedPairsInLevel: 0,
           roundMatchedPairs: 0,
-          currentRound: 1,
+          currentRound,
           remainingTime: settings.timeLimit,
           isComplete: false,
           unusedPairs: remainingUnused,
+          levelPairs: pairs,
           showRoundTransition: false,
           isPaused: false,
         },
@@ -172,11 +175,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       );
 
       // Get pairs for the next round
-      const displayedPairs = state.progress.unusedPairs.slice(
+      const displayedPairs = state.progress.levelPairs.slice(
         startIndex,
         startIndex + pairsForNextRound
       );
-      const remainingPairs = state.progress.unusedPairs.slice(
+      const remainingPairs = state.progress.levelPairs.slice(
         startIndex + pairsForNextRound
       );
 
@@ -297,6 +300,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           remainingTime: difficultySettings[level].timeLimit,
           isComplete: false,
           unusedPairs: [], // Will be populated when game is initialized
+          levelPairs: [], // Will be populated when game is initialized
           roundMatchedPairs: 0,
           currentRound: 1,
           showRoundTransition: false,
@@ -314,8 +318,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const displayCount = settings.displayedPairs;
 
       // Split pairs into displayed and unused
-      const displayedPairs = pairs.slice(0, displayCount);
-      const remainingPairs = pairs.slice(displayCount);
+      const currentRound = 1;
+      const roundPairs = pairs.slice(0, getCurrentRoundPairs(state.progress.currentLevel, currentRound));
+      const displayedPairs = roundPairs.slice(0, displayCount);
+      const remainingPairs = roundPairs.slice(displayCount);
 
       // Initialize randomized pairs
       const { randomizedPairs, remainingUnused } =
@@ -330,8 +336,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           remainingTime: settings.timeLimit,
           isComplete: false,
           unusedPairs: remainingUnused,
+          levelPairs: pairs,
           roundMatchedPairs: 0,
-          currentRound: 1,
+          currentRound,
           showRoundTransition: false,
           isPaused: false,
         },
