@@ -175,12 +175,15 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       );
 
       // Get pairs for the next round
-      const displayedPairs = state.progress.levelPairs.slice(
-        startIndex,
-        startIndex + pairsForNextRound
+      const settings = difficultySettings[state.progress.currentLevel];
+      const displayCount = settings.displayedPairs;
+      const roundPairs = state.progress.levelPairs.slice(startIndex, startIndex + pairsForNextRound);
+      const displayedPairs = roundPairs.slice(
+        0,
+        displayCount
       );
-      const remainingPairs = state.progress.levelPairs.slice(
-        startIndex + pairsForNextRound
+      const remainingPairs = roundPairs.slice(
+        displayCount
       );
 
       // Initialize randomized pairs for the new round
