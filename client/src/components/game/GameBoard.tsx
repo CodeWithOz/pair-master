@@ -375,7 +375,22 @@ export function GameBoard() {
 
       <div className="flex justify-center gap-4">
         {state.progress.showRoundTransition ? (
-          <Button onClick={handleContinue}>Continue</Button>
+          state.progress.isComplete ? (
+            <>
+              {state.progress.currentLevel < 3 && (
+                <Button
+                  onClick={() =>
+                    handleLevelSelect((state.progress.currentLevel + 1) as DifficultyLevel)
+                  }
+                >
+                  Next Level
+                </Button>
+              )}
+              <Button onClick={() => resetGame()}>Reset Level</Button>
+            </>
+          ) : (
+            <Button onClick={handleContinue}>Continue</Button>
+          )
         ) : (
           <Button onClick={() => resetGame()}>Reset Level</Button>
         )}
