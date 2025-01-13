@@ -287,10 +287,6 @@ export function GameBoard() {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const continueToNextRound = () => {
-    dispatch({ type: "CONTINUE_TO_NEXT_ROUND" });
-  }
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 max-w-2xl mx-auto flex justify-between items-center">

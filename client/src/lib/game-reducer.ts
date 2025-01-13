@@ -30,9 +30,6 @@ type GameAction =
       type: "INITIALIZE_GAME";
       payload: { pairs: ExtendedWordPair[]; level: DifficultyLevel };
     }
-  | { type: "START_NEXT_ROUND" }
-  | { type: "PAUSE_TIMER" }
-  | { type: "RESUME_TIMER" }
   | { type: "SELECT_CARD"; payload: { cardId: string; isLeftColumn: boolean } }
   | { type: "MARK_PAIR_MATCHED"; payload: { pairId: number } }
   | { type: "CLEAR_SELECTED_PAIR"; payload: { cardIds: string[] } }
@@ -237,56 +234,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         selectedCards: [],
         activeMatchAnimations: new Set(),
         activeFailAnimations: new Set(),
-      };
-    }
-
-    case "START_NEXT_ROUND": {
-      const level = state.progress.currentLevel;
-      const settings = difficultySettings[level];
-      const currentRound = state.currentRound + 1;
-      const roundSettings = settings.rounds[currentRound];
-      const isFinalRound = currentRound === settings.rounds.length - 1;
-
-      // Get pairs for the new round
-      const { pairs: displayedPairs, unusedPairs } = getNextRoundPairs(
-        state.progress.unusedPairs,
-        roundSettings.requiredPairs
-      );
-
-      return {
-        ...state,
-        cards: generateGameCards(level, displayedPairs, roundSettings.displayedPairs),
-        progress: {
-          ...state.progress,
-          matchedPairsInLevel: 0,
-          unusedPairs,
-        },
-        selectedCards: [],
-        activeMatchAnimations: new Set(),
-        activeFailAnimations: new Set(),
-        currentRound,
-        isRoundComplete: false,
-        isFinalRound,
-      };
-    }
-
-    case "PAUSE_TIMER": {
-      return {
-        ...state,
-        progress: {
-          ...state.progress,
-          isPaused: true,
-        },
-      };
-    }
-
-    case "RESUME_TIMER": {
-      return {
-        ...state,
-        progress: {
-          ...state.progress,
-          isPaused: false,
-        },
       };
     }
 
