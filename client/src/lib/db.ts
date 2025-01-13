@@ -1,4 +1,3 @@
-
 import Dexie, { Table } from 'dexie';
 import { WordPair } from './game-data';
 
@@ -17,8 +16,17 @@ export const db = new WordDatabase();
 
 // Initialize database with default words if empty
 export async function initializeDatabase(defaultPairs: WordPair[]) {
-  const count = await db.wordPairs.count();
-  if (count === 0) {
-    await db.wordPairs.bulkAdd(defaultPairs);
+  try {
+    const count = await db.wordPairs.count();
+    if (count === 0) {
+      console.log('Initializing database with default word pairs...');
+      await db.wordPairs.bulkAdd(defaultPairs);
+      console.log('Database initialized successfully');
+    } else {
+      console.log('Database already contains word pairs, skipping initialization');
+    }
+  } catch (error) {
+    console.error('Error initializing database:', error);
+    throw error;
   }
 }

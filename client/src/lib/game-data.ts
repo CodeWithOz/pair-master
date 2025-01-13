@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { shuffleArray } from "./utils";
+import { db } from "./db";
 
 export interface WordPair {
   id: number;
@@ -22,9 +23,24 @@ export const difficultyLevels = {
 export type DifficultyLevel = keyof typeof difficultyLevels;
 
 export const difficultySettings = {
-  1: { timeLimit: 180, requiredPairs: 15, displayedPairs: 5 }, // 3:00 minutes
-  2: { timeLimit: 150, requiredPairs: 20, displayedPairs: 5 }, // 2:30 minutes
-  3: { timeLimit: 120, requiredPairs: 25, displayedPairs: 5 }  // 2:00 minutes
+  1: { 
+    timeLimit: 180, 
+    requiredPairs: 15, 
+    displayedPairs: 5,
+    roundPairs: [5, 5, 5] // Distribution of pairs across rounds
+  },
+  2: { 
+    timeLimit: 150, 
+    requiredPairs: 20, 
+    displayedPairs: 5,
+    roundPairs: [5, 7, 8]
+  },
+  3: { 
+    timeLimit: 120, 
+    requiredPairs: 25, 
+    displayedPairs: 5,
+    roundPairs: [7, 8, 10]
+  }
 } as const;
 
 export const wordPairs: WordPair[] = [
@@ -44,7 +60,6 @@ export const wordPairs: WordPair[] = [
   { id: 13, german: "Tag", english: "day", difficulty: 1 },
   { id: 14, german: "Nacht", english: "night", difficulty: 1 },
   { id: 15, german: "Zeit", english: "time", difficulty: 1 },
-
   // Intermediate (Level 2) - 20 pairs
   { id: 16, german: "Entwicklung", english: "development", difficulty: 2 },
   { id: 17, german: "Wissenschaft", english: "science", difficulty: 2 },
@@ -66,7 +81,6 @@ export const wordPairs: WordPair[] = [
   { id: 33, german: "Kenntnis", english: "knowledge", difficulty: 2 },
   { id: 34, german: "Ordnung", english: "order", difficulty: 2 },
   { id: 35, german: "Leistung", english: "performance", difficulty: 2 },
-
   // Advanced (Level 3) - 25 pairs
   { id: 36, german: "Nachhaltigkeit", english: "sustainability", difficulty: 3 },
   { id: 37, german: "Wahrscheinlichkeit", english: "probability", difficulty: 3 },
@@ -109,7 +123,11 @@ export interface GameProgress {
   matchedPairsInLevel: number;
   remainingTime: number;
   isComplete: boolean;
-  unusedPairs: ExtendedWordPair[]; // Added state to track unused pairs
+  unusedPairs: ExtendedWordPair[];
+  currentRound: number;
+  roundMatchedPairs: number;
+  showRoundTransition: boolean;
+  isPaused: boolean;
 }
 
 export function isLevelUnlocked(progress: GameProgress, level: DifficultyLevel): boolean {
@@ -118,30 +136,31 @@ export function isLevelUnlocked(progress: GameProgress, level: DifficultyLevel):
 
 export function canUnlockNextLevel(progress: GameProgress): boolean {
   const nextLevel = (progress.currentLevel + 1) as DifficultyLevel;
-  const settings = difficultySettings[progress.currentLevel];
   return (
-    progress.matchedPairsInLevel >= settings.requiredPairs &&
+    progress.matchedPairsInLevel >= difficultySettings[progress.currentLevel].requiredPairs &&
     nextLevel in difficultyLevels &&
     progress.isComplete
   );
 }
 
 export async function getWordPairsForLevel(level: DifficultyLevel): Promise<WordPair[]> {
-  const db = (await import('./db')).db;
   const requiredPairs = difficultySettings[level].requiredPairs;
   return await db.wordPairs
     .where('difficulty')
     .equals(level)
-    .reverse()
     .limit(requiredPairs)
     .toArray();
 }
 
 export async function getInitialShuffledPairs(level: DifficultyLevel): Promise<ExtendedWordPair[]> {
   const levelPairs = await getWordPairsForLevel(level);
-  return shuffleArray([
-    ...levelPairs.map((pair) => ({ ...pair, germanWordPairId: pair.id, englishWordPairId: pair.id }))
-  ]);
+  return shuffleArray(
+    levelPairs.map((pair) => ({
+      ...pair,
+      germanWordPairId: pair.id,
+      englishWordPairId: pair.id,
+    }))
+  );
 }
 
 export function generateGameCards(
@@ -149,14 +168,11 @@ export function generateGameCards(
   availablePairs: ExtendedWordPair[],
   displayCount: number = difficultySettings[level].displayedPairs
 ): { leftColumn: GameCard[], rightColumn: GameCard[] } {
-  // Take the first n pairs sequentially from available pairs
   const selectedPairs = availablePairs.slice(0, displayCount);
-
   const leftCards: GameCard[] = [];
   const rightCards: GameCard[] = [];
 
   selectedPairs.forEach(pair => {
-    // Add timestamp to ensure unique IDs even for the same pair
     const timestamp = Date.now();
     leftCards.push({
       id: `en-${pair.id}-${timestamp}`,
@@ -176,4 +192,18 @@ export function generateGameCards(
   });
 
   return { leftColumn: shuffleArray(leftCards), rightColumn: shuffleArray(rightCards) };
+}
+
+export function getCurrentRoundPairs(level: DifficultyLevel, round: number): number {
+  return difficultySettings[level].roundPairs[round - 1];
+}
+
+export function isLastRound(level: DifficultyLevel, round: number): boolean {
+  return round >= difficultySettings[level].roundPairs.length;
+}
+
+export function getTotalRequiredPairsUpToRound(level: DifficultyLevel, round: number): number {
+  return difficultySettings[level].roundPairs
+    .slice(0, round)
+    .reduce((sum, pairs) => sum + pairs, 0);
 }

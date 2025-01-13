@@ -5,11 +5,35 @@ import { WordManagement } from "./components/game/WordManagement";
 import { initializeDatabase } from "./lib/db";
 import { wordPairs } from "./lib/game-data";
 import { Toaster } from "@/components/ui/toaster";
-
-// Initialize database with default words
-initializeDatabase(wordPairs);
+import { useEffect, useState } from "react";
 
 function App() {
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    // Initialize database with default words
+    const init = async () => {
+      try {
+        await initializeDatabase(wordPairs);
+        setIsInitialized(true);
+      } catch (error) {
+        console.error("Failed to initialize database:", error);
+      }
+    };
+    init();
+  }, []);
+
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold">Loading game data...</h2>
+          <p className="text-sm text-muted-foreground">Please wait...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Switch>
