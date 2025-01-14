@@ -32,7 +32,7 @@ type GameAction =
       payload: { pairs: ExtendedWordPair[]; level: DifficultyLevel };
     }
   | { type: "SELECT_CARD"; payload: { cardId: string; isLeftColumn: boolean } }
-  | { type: "MARK_PAIR_MATCHED"; payload: { pairId: number } }
+  | { type: "MARK_PAIR_MATCHED"; payload: { pairId: number, isAfterTransition: boolean } }
   | { type: "CLEAR_SELECTED_CARDS"; payload: { cardIds: string[] } }
   | {
       type: "SET_ANIMATION";
@@ -90,7 +90,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
 
     case "MARK_PAIR_MATCHED": {
-      const { pairId } = action.payload;
+      const { pairId, isAfterTransition } = action.payload;
 
       // Update cards state
       let updatedCards = {
@@ -108,7 +108,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         currentRandomizedPairs,
         nextPairIndex,
         unusedPairs,
-      } = getNextRandomizedPair(state);
+      } = getNextRandomizedPair(state, isAfterTransition);
 
       if (nextPair) {
         const newCards = generateGameCards(
@@ -366,6 +366,37 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   }
 }
 
+function unrandomizePairs(randomizedPairs: ExtendedWordPair[]): ExtendedWordPair[] {
+  // Create all possible combinations
+  const allWords = randomizedPairs.flatMap((pair) => [
+    {
+      id: pair.germanWordPairId,
+      word: pair.german,
+      isGerman: true,
+    },
+    {
+      id: pair.englishWordPairId,
+      word: pair.english,
+      isGerman: false,
+    },
+  ]);
+
+  // Reverse the order of English cards
+  const germanWords = allWords.filter((w) => w.isGerman);
+  const englishWords = allWords.filter((w) => !w.isGerman).reverse()
+
+  // Create new pairs
+  const unrandomizedPairs: ExtendedWordPair[] = germanWords.map((german, i) => ({
+    id: german.id,
+    german: german.word,
+    english: englishWords[i].word,
+    germanWordPairId: german.id,
+    englishWordPairId: englishWords[i].id,
+  }));
+
+  return unrandomizedPairs;
+}
+
 function createRandomizedPairs(unusedPairs: ExtendedWordPair[]): {
   randomizedPairs: ExtendedWordPair[];
   remainingUnused: ExtendedWordPair[];
@@ -416,12 +447,28 @@ function createRandomizedPairs(unusedPairs: ExtendedWordPair[]): {
   return { randomizedPairs, remainingUnused };
 }
 
-function getNextRandomizedPair(state: GameState): {
+function getNextRandomizedPair(state: GameState, skipRandomization: boolean): {
   randomizedPair: ExtendedWordPair | null;
   currentRandomizedPairs: ExtendedWordPair[];
   nextPairIndex: number;
   unusedPairs: ExtendedWordPair[];
 } {
+  if (skipRandomization && state.currentRandomizedPairs.length >= 2 && state.nextPairIndex === 0) {
+    // show the next pair without randomization
+    const unrandomizedPairs = unrandomizePairs(state.currentRandomizedPairs);
+    const nextPair = unrandomizedPairs[0];
+    const unusedPairs = [...unrandomizedPairs.slice(1), ...state.progress.unusedPairs];
+    const { randomizedPairs, remainingUnused } = createRandomizedPairs(
+      unusedPairs,
+    );
+    return {
+      randomizedPair: nextPair,
+      currentRandomizedPairs: randomizedPairs,
+      nextPairIndex: 0,
+      unusedPairs: remainingUnused,
+    };
+  }
+
   if (state.currentRandomizedPairs.length > state.nextPairIndex) {
     return {
       randomizedPair: state.currentRandomizedPairs[state.nextPairIndex],

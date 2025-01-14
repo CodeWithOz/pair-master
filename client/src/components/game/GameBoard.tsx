@@ -175,10 +175,11 @@ export function GameBoard() {
     pairId: number,
     firstCardId: string,
     secondCardId: string,
+    isAfterTransition: boolean,
   ) => {
     dispatch({
       type: "MARK_PAIR_MATCHED",
-      payload: { pairId },
+      payload: { pairId, isAfterTransition },
     });
 
     dispatch({
@@ -255,7 +256,7 @@ export function GameBoard() {
                 (c) => c.pairId === pairId,
               )?.id;
             if (firstCardId && secondCardId) {
-              finalizeCardMatch(pairId, firstCardId, secondCardId);
+              finalizeCardMatch(pairId, firstCardId, secondCardId, false);
             }
           },
         );
@@ -270,6 +271,7 @@ export function GameBoard() {
           firstCard.pairId,
           firstId,
           cardId,
+          true,
         );
 
         timeoutsRef.current.set(matchKey, timeoutId);
