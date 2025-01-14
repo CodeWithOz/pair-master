@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { difficultyLevels, type DifficultyLevel, type GameProgress } from "@/lib/game-data";
 import { Lock, LockOpen } from "lucide-react";

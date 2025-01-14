@@ -91,7 +91,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case "MARK_PAIR_MATCHED": {
       const { pairId } = action.payload;
-      const settings = difficultySettings[state.progress.currentLevel];
 
       // Update cards state
       let updatedCards = {
@@ -392,13 +391,11 @@ function createRandomizedPairs(unusedPairs: ExtendedWordPair[]): {
       id: pair.germanWordPairId,
       word: pair.german,
       isGerman: true,
-      difficulty: pair.difficulty,
     },
     {
       id: pair.englishWordPairId,
       word: pair.english,
       isGerman: false,
-      difficulty: pair.difficulty,
     },
   ]);
 
@@ -412,7 +409,6 @@ function createRandomizedPairs(unusedPairs: ExtendedWordPair[]): {
     id: german.id,
     german: german.word,
     english: englishWords[i].word,
-    difficulty: german.difficulty,
     germanWordPairId: german.id,
     englishWordPairId: englishWords[i].id,
   }));
