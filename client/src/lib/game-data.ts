@@ -135,6 +135,49 @@ export interface GameProgress {
   isPaused: boolean;
 }
 
+// Word pair processing worker wrapper
+class WordPairWorker {
+  private worker: Worker;
+
+  constructor() {
+    this.worker = new Worker(
+      new URL('./workers/word-pairs.worker.ts', import.meta.url),
+      { type: 'module' }
+    );
+  }
+
+  private async postMessage<T>(message: any): Promise<T> {
+    return new Promise((resolve) => {
+      const handler = (e: MessageEvent) => {
+        this.worker.removeEventListener('message', handler);
+        resolve(e.data);
+      };
+      this.worker.addEventListener('message', handler);
+      this.worker.postMessage(message);
+    });
+  }
+
+  async getWordPairsForLevel(pairs: WordPair[], level: DifficultyLevel): Promise<WordPair[]> {
+    const response = await this.postMessage<{ pairs: WordPair[] }>({
+      type: 'GET_WORD_PAIRS',
+      pairs,
+      level,
+    });
+    return response.pairs;
+  }
+
+  async getShuffledPairs(pairs: WordPair[], level: DifficultyLevel): Promise<ExtendedWordPair[]> {
+    const response = await this.postMessage<{ pairs: ExtendedWordPair[] }>({
+      type: 'GET_SHUFFLED_PAIRS',
+      pairs,
+      level,
+    });
+    return response.pairs;
+  }
+}
+
+const wordPairWorker = new WordPairWorker();
+
 export function isLevelUnlocked(progress: GameProgress, level: DifficultyLevel): boolean {
   return level <= progress.highestUnlockedLevel;
 }
@@ -149,22 +192,13 @@ export function canUnlockNextLevel(progress: GameProgress): boolean {
 }
 
 export async function getWordPairsForLevel(level: DifficultyLevel): Promise<WordPair[]> {
-  const requiredPairs = difficultySettings[level].requiredPairs;
-  return await db.wordPairs
-    .reverse()
-    .limit(requiredPairs)
-    .toArray();
+  const allPairs = await db.wordPairs.toArray();
+  return wordPairWorker.getWordPairsForLevel(allPairs, level);
 }
 
 export async function getInitialShuffledPairs(level: DifficultyLevel): Promise<ExtendedWordPair[]> {
-  const levelPairs = await getWordPairsForLevel(level);
-  return shuffleArray(
-    levelPairs.map((pair) => ({
-      ...pair,
-      germanWordPairId: pair.id,
-      englishWordPairId: pair.id,
-    }))
-  );
+  const allPairs = await db.wordPairs.toArray();
+  return wordPairWorker.getShuffledPairs(allPairs, level);
 }
 
 export function generateGameCards(
