@@ -305,7 +305,7 @@ export function GameBoard() {
           });
 
           timeoutsRef.current.delete(failKey);
-        }, 1000);
+        }, 500);
 
         timeoutsRef.current.set(failKey, timeoutId);
       }
