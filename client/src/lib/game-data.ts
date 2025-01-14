@@ -137,42 +137,91 @@ export interface GameProgress {
 
 // Word pair processing worker wrapper
 class WordPairWorker {
-  private worker: Worker;
+  private worker: Worker | null = null;
+  private initPromise: Promise<void>;
 
   constructor() {
-    this.worker = new Worker(
-      new URL('./workers/word-pairs.worker.ts', import.meta.url),
-      { type: 'module' }
-    );
+    this.initPromise = this.initializeWorker();
+  }
+
+  private async initializeWorker(): Promise<void> {
+    try {
+      this.worker = new Worker(
+        new URL('./workers/word-pairs.worker.ts', import.meta.url),
+        { type: 'module' }
+      );
+      console.log('Word pair worker initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize word pair worker:', error);
+      throw error;
+    }
   }
 
   private async postMessage<T>(message: any): Promise<T> {
-    return new Promise((resolve) => {
-      const handler = (e: MessageEvent) => {
-        this.worker.removeEventListener('message', handler);
-        resolve(e.data);
+    await this.initPromise;
+    if (!this.worker) {
+      throw new Error('Worker not initialized');
+    }
+
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error('Worker response timeout'));
+      }, 5000);
+
+      const messageHandler = (e: MessageEvent) => {
+        clearTimeout(timeoutId);
+        if (this.worker) {
+          this.worker.removeEventListener('message', messageHandler);
+        }
+        if ('error' in e.data) {
+          reject(new Error(e.data.error));
+        } else {
+          resolve(e.data);
+        }
       };
-      this.worker.addEventListener('message', handler);
+
+      this.worker.addEventListener('message', messageHandler);
       this.worker.postMessage(message);
     });
   }
 
   async getWordPairsForLevel(pairs: WordPair[], level: DifficultyLevel): Promise<WordPair[]> {
-    const response = await this.postMessage<{ pairs: WordPair[] }>({
-      type: 'GET_WORD_PAIRS',
-      pairs,
-      level,
-    });
-    return response.pairs;
+    try {
+      const response = await this.postMessage<{ pairs: WordPair[] }>({
+        type: 'GET_WORD_PAIRS',
+        pairs,
+        level,
+      });
+      return response.pairs;
+    } catch (error) {
+      console.error('Error getting word pairs for level:', error);
+      // Fallback to main thread processing if worker fails
+      const requiredPairs = difficultySettings[level].requiredPairs;
+      return pairs.slice(0, requiredPairs);
+    }
   }
 
   async getShuffledPairs(pairs: WordPair[], level: DifficultyLevel): Promise<ExtendedWordPair[]> {
-    const response = await this.postMessage<{ pairs: ExtendedWordPair[] }>({
-      type: 'GET_SHUFFLED_PAIRS',
-      pairs,
-      level,
-    });
-    return response.pairs;
+    try {
+      const response = await this.postMessage<{ pairs: ExtendedWordPair[] }>({
+        type: 'GET_SHUFFLED_PAIRS',
+        pairs,
+        level,
+      });
+      return response.pairs;
+    } catch (error) {
+      console.error('Error getting shuffled pairs:', error);
+      // Fallback to main thread processing if worker fails
+      const requiredPairs = difficultySettings[level].requiredPairs;
+      const levelPairs = pairs.slice(0, requiredPairs);
+      return shuffleArray(
+        levelPairs.map((pair) => ({
+          ...pair,
+          germanWordPairId: pair.id,
+          englishWordPairId: pair.id,
+        }))
+      );
+    }
   }
 }
 
