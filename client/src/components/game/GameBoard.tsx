@@ -63,7 +63,8 @@ export function GameBoard() {
       state.progress.remainingTime <= 0 ||
       state.progress.isComplete ||
       state.progress.isPaused
-    ) return;
+    )
+      return;
 
     let timeoutId: NodeJS.Timeout;
 
@@ -75,11 +76,15 @@ export function GameBoard() {
             title: "Time's Up!",
             description: "Try again or select a different level.",
           });
-          dispatch({ type: 'UPDATE_TIMER', payload: { newTime: 0 } });
+          dispatch({ type: "UPDATE_TIMER", payload: { newTime: 0 } });
         } else {
-          dispatch({ type: 'UPDATE_TIMER', payload: { newTime } });
+          dispatch({ type: "UPDATE_TIMER", payload: { newTime } });
           // Schedule next tick if time remaining and not complete
-          if (newTime > 0 && !state.progress.isComplete && !state.progress.isPaused) {
+          if (
+            newTime > 0 &&
+            !state.progress.isComplete &&
+            !state.progress.isPaused
+          ) {
             runTimer();
           }
         }
@@ -91,7 +96,12 @@ export function GameBoard() {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [state.progress.remainingTime, state.progress.isComplete, state.progress.isPaused, toast]);
+  }, [
+    state.progress.remainingTime,
+    state.progress.isComplete,
+    state.progress.isPaused,
+    toast,
+  ]);
 
   // Initialize game data
   useEffect(() => {
@@ -102,7 +112,7 @@ export function GameBoard() {
         );
 
         dispatch({
-          type: 'INITIALIZE_GAME',
+          type: "INITIALIZE_GAME",
           payload: {
             pairs: shuffledPairs,
             level: state.progress.currentLevel,
@@ -131,7 +141,7 @@ export function GameBoard() {
       );
 
       dispatch({
-        type: 'RESET_LEVEL',
+        type: "RESET_LEVEL",
         payload: { pairs: shuffledPairs },
       });
     } catch (error) {
@@ -154,19 +164,23 @@ export function GameBoard() {
     return state.cards.leftColumn.some((card) => card.id === cardId);
   };
 
-  const finalizeCardMatch = (pairId: number, firstCardId: string, secondCardId: string) => {
+  const finalizeCardMatch = (
+    pairId: number,
+    firstCardId: string,
+    secondCardId: string,
+  ) => {
     dispatch({
-      type: 'MARK_PAIR_MATCHED',
+      type: "MARK_PAIR_MATCHED",
       payload: { pairId },
     });
 
     dispatch({
-      type: 'SET_ANIMATION',
-      payload: { type: 'match', key: pairId, active: false },
+      type: "SET_ANIMATION",
+      payload: { type: "match", key: pairId, active: false },
     });
 
     dispatch({
-      type: 'CLEAR_SELECTED_PAIR',
+      type: "CLEAR_SELECTED_PAIR",
       payload: { cardIds: [firstCardId, secondCardId] },
     });
 
@@ -178,14 +192,19 @@ export function GameBoard() {
   };
 
   const handleCardClick = (cardId: string) => {
-    if (state.progress.remainingTime <= 0 || state.progress.isComplete || state.progress.isPaused) return;
+    if (
+      state.progress.remainingTime <= 0 ||
+      state.progress.isComplete ||
+      state.progress.isPaused
+    )
+      return;
 
     const card = findCardInColumns(cardId);
     if (!card || card.isMatched || state.selectedCards.includes(cardId)) return;
 
     const isLeftColumn = isCardInLeftColumn(cardId);
     const selectCardAction = {
-      type: 'SELECT_CARD' as const,
+      type: "SELECT_CARD" as const,
       payload: { cardId, isLeftColumn },
     };
     dispatch(selectCardAction);
@@ -203,23 +222,33 @@ export function GameBoard() {
         const matchKey = `match-${firstCard.pairId}`;
 
         dispatch({
-          type: 'SET_ANIMATION',
-          payload: { type: 'match', key: firstCard.pairId, active: true },
+          type: "SET_ANIMATION",
+          payload: { type: "match", key: firstCard.pairId, active: true },
         });
 
         if (timeoutsRef.current.has(matchKey)) {
           clearTimeout(timeoutsRef.current.get(matchKey)!);
         }
 
-        nextStateAfterSelectCard.activeMatchAnimations.forEach((pairId: number) => {
-          const firstCardId = nextStateAfterSelectCard.cards.leftColumn.find((c) => c.pairId === pairId)?.id;
-          const secondCardId = nextStateAfterSelectCard.cards.rightColumn.find((c) => c.pairId === pairId)?.id;
-          if (firstCardId && secondCardId) {
-            finalizeCardMatch(pairId, firstCardId, secondCardId);
-          }
-        });
+        nextStateAfterSelectCard.activeMatchAnimations.forEach(
+          (pairId: number) => {
+            const firstCardId = nextStateAfterSelectCard.cards.leftColumn.find(
+              (c) => c.pairId === pairId,
+            )?.id;
+            const secondCardId =
+              nextStateAfterSelectCard.cards.rightColumn.find(
+                (c) => c.pairId === pairId,
+              )?.id;
+            if (firstCardId && secondCardId) {
+              finalizeCardMatch(pairId, firstCardId, secondCardId);
+            }
+          },
+        );
 
-        const animationDuration = nextStateAfterSelectCard.progress.unusedPairs.length > 0 ? 3000 : 1000;
+        const animationDuration =
+          nextStateAfterSelectCard.progress.unusedPairs.length > 0
+            ? 3000
+            : 1000;
         const timeoutId = setTimeout(
           finalizeCardMatch,
           animationDuration,
@@ -234,8 +263,8 @@ export function GameBoard() {
         const failKey = `fail_${firstId}_${cardId}`;
 
         dispatch({
-          type: 'SET_ANIMATION',
-          payload: { type: 'fail', key: failKey, active: true },
+          type: "SET_ANIMATION",
+          payload: { type: "fail", key: failKey, active: true },
         });
 
         if (timeoutsRef.current.has(failKey)) {
@@ -244,12 +273,12 @@ export function GameBoard() {
 
         const timeoutId = setTimeout(() => {
           dispatch({
-            type: 'SET_ANIMATION',
-            payload: { type: 'fail', key: failKey, active: false },
+            type: "SET_ANIMATION",
+            payload: { type: "fail", key: failKey, active: false },
           });
 
           dispatch({
-            type: 'CLEAR_SELECTED_PAIR',
+            type: "CLEAR_SELECTED_PAIR",
             payload: { cardIds: [firstId, cardId] },
           });
 
@@ -266,18 +295,18 @@ export function GameBoard() {
     timeoutsRef.current.clear();
 
     dispatch({
-      type: 'CHANGE_LEVEL',
+      type: "CHANGE_LEVEL",
       payload: { level },
     });
   };
 
   const handleContinue = () => {
-    dispatch({ type: 'START_NEXT_ROUND' });
+    dispatch({ type: "START_NEXT_ROUND" });
   };
 
   const getIsFailAnimation = (cardId: string): boolean => {
-    return Array.from(state.activeFailAnimations).some(key => {
-      const [, id1, id2] = key.split('_');
+    return Array.from(state.activeFailAnimations).some((key) => {
+      const [, id1, id2] = key.split("_");
       return cardId === id1 || cardId === id2;
     });
   };
@@ -291,12 +320,12 @@ export function GameBoard() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 max-w-2xl mx-auto flex justify-between items-center">
-        <Button 
-          onClick={() => setLocation("/")} 
+        <Button
+          onClick={() => setLocation("/")}
           variant="ghost"
           className="shadow-[0_0_0_1px_hsl(var(--border))]"
         >
-          <Home className="h-6 w-6 inline-block mr-2"/> Home
+          <Home className="h-6 w-6 inline-block mr-2" /> Home
         </Button>
         <Button
           onClick={() => setLocation("/manage-words")}
@@ -318,10 +347,13 @@ export function GameBoard() {
           Time: {formatTime(state.progress.remainingTime)}
         </div>
         <div className="text-sm text-gray-600">
-          Round {state.progress.currentRound}/3 - Matches: {state.progress.roundMatchedPairs}/
-          {difficultySettings[state.progress.currentLevel].roundPairs[
-            state.progress.currentRound - 1
-          ]}
+          Round {state.progress.currentRound}/3 - Matches:{" "}
+          {state.progress.roundMatchedPairs}/
+          {
+            difficultySettings[state.progress.currentLevel].roundPairs[
+              state.progress.currentRound - 1
+            ]
+          }
         </div>
         <div className="text-xs text-gray-500">
           Total Matches: {state.progress.matchedPairsInLevel}/
@@ -334,10 +366,14 @@ export function GameBoard() {
         {state.progress.showRoundTransition && (
           <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-lg">
             <p className="text-2xl font-bold text-green-600 mb-2">
-              {state.progress.isComplete ? "Congratulations!" : "Nice work so far!"}
+              {state.progress.isComplete
+                ? "Congratulations!"
+                : "Nice work so far!"}
             </p>
             <p className="text-lg text-gray-900">
-              {state.progress.isComplete ? "You beat this level!" : "Ready to continue?"}
+              {state.progress.isComplete
+                ? "You beat this level!"
+                : "Ready to continue?"}
             </p>
           </div>
         )}
@@ -380,7 +416,9 @@ export function GameBoard() {
               {state.progress.currentLevel < 3 && (
                 <Button
                   onClick={() =>
-                    handleLevelSelect((state.progress.currentLevel + 1) as DifficultyLevel)
+                    handleLevelSelect(
+                      (state.progress.currentLevel + 1) as DifficultyLevel,
+                    )
                   }
                 >
                   Next Level
