@@ -38,6 +38,7 @@ const initialState = {
   activeFailAnimations: new Set<string>(),
   currentRandomizedPairs: [],
   nextPairIndex: 0,
+  isFetchingPairs: false, // Added isFetchingPairs state
 };
 
 // Infer the state type from initialState
@@ -107,6 +108,7 @@ export function GameBoard() {
   useEffect(() => {
     const initializeGame = async () => {
       try {
+        dispatch({ type: "SET_FETCHING_PAIRS", payload: { isFetching: true } });
         const shuffledPairs = await getInitialShuffledPairs(
           state.progress.currentLevel,
         );
@@ -125,6 +127,8 @@ export function GameBoard() {
           description: "Failed to load word pairs. Please try again.",
           variant: "destructive",
         });
+      } finally {
+        dispatch({ type: "SET_FETCHING_PAIRS", payload: { isFetching: false } });
       }
     };
 
@@ -375,6 +379,13 @@ export function GameBoard() {
                 ? "You beat this level!"
                 : "Ready to continue?"}
             </p>
+          </div>
+        )}
+
+        {/* Loading overlay */}
+        {state.isFetchingPairs && (
+          <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
+            <p className="text-lg text-gray-900">Loading...</p>
           </div>
         )}
 

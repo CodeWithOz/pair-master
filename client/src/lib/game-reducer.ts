@@ -22,6 +22,7 @@ interface GameState {
   activeFailAnimations: Set<string>;
   currentRandomizedPairs: ExtendedWordPair[];
   nextPairIndex: number;
+  isFetchingPairs: boolean;
 }
 
 // Action types
@@ -44,7 +45,8 @@ type GameAction =
   | { type: "UPDATE_TIMER"; payload: { newTime: number } }
   | { type: "CHANGE_LEVEL"; payload: { level: DifficultyLevel } }
   | { type: "RESET_LEVEL"; payload: { pairs: ExtendedWordPair[] } }
-  | { type: "START_NEXT_ROUND" };
+  | { type: "START_NEXT_ROUND" }
+  | { type: "SET_FETCHING_PAIRS"; payload: { isFetching: boolean } };
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
@@ -350,6 +352,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         activeFailAnimations: new Set(),
         currentRandomizedPairs: randomizedPairs,
         nextPairIndex: 0,
+      };
+    }
+
+    case "SET_FETCHING_PAIRS": {
+      return {
+        ...state,
+        isFetchingPairs: action.payload.isFetching,
       };
     }
 
