@@ -160,15 +160,13 @@ function getWorker() {
 }
 
 export async function getInitialShuffledPairs(level: DifficultyLevel): Promise<ExtendedWordPair[]> {
-  const pairs = await db.wordPairs
-    .reverse()
-    .limit(difficultySettings[level].requiredPairs)
-    .toArray();
+  const pairs = await db.wordPairs.toArray();
     
   return new Promise((resolve) => {
     const worker = getWorker();
     worker.onmessage = (e: MessageEvent) => {
-      resolve(e.data);
+      const shuffledPairs = e.data as ExtendedWordPair[];
+      resolve(shuffledPairs.slice(0, difficultySettings[level].requiredPairs));
     };
     worker.postMessage({ level, pairs });
   });
