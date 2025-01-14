@@ -19,9 +19,9 @@ export interface ExtendedWordPair extends WordPair {
 }
 
 export const difficultyLevels = {
-  1: "Beginner",
-  2: "Intermediate",
-  3: "Advanced"
+  1: "Easy",
+  2: "Medium",
+  3: "Hard"
 } as const;
 
 export type DifficultyLevel = keyof typeof difficultyLevels;
