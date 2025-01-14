@@ -140,6 +140,7 @@ export function GameBoard() {
       timeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
       timeoutsRef.current.clear();
 
+      dispatch({ type: "SET_FETCHING_PAIRS", payload: { isFetching: true } });
       const shuffledPairs = await getInitialShuffledPairs(
         state.progress.currentLevel,
       );
@@ -155,6 +156,8 @@ export function GameBoard() {
         description: "Failed to reset the game. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      dispatch({ type: "SET_FETCHING_PAIRS", payload: { isFetching: false } });
     }
   }, [state.progress.currentLevel, toast]);
 
@@ -367,7 +370,7 @@ export function GameBoard() {
 
       <div className="relative max-w-2xl mx-auto mb-8">
         {/* Round transition overlay */}
-        {state.progress.showRoundTransition && (
+        {!state.isFetchingPairs && state.progress.showRoundTransition && (
           <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-lg">
             <p className="text-2xl font-bold text-green-600 mb-2">
               {state.progress.isComplete
@@ -384,66 +387,72 @@ export function GameBoard() {
 
         {/* Loading overlay */}
         {state.isFetchingPairs && (
-          <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
+          <div className="bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center h-40 w-full">
             <p className="text-lg text-gray-900">Loading...</p>
           </div>
         )}
 
         {/* Game grid */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-4">
-            {state.cards.leftColumn.map((card) => (
-              <Card
-                key={card.id}
-                word={card.word}
-                isMatched={card.isMatched}
-                isSelected={state.selectedCards.includes(card.id)}
-                isMatchAnimation={state.activeMatchAnimations.has(card.pairId)}
-                isFailAnimation={getIsFailAnimation(card.id)}
-                onClick={() => handleCardClick(card.id)}
-              />
-            ))}
+        {!state.isFetchingPairs && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
+              {state.cards.leftColumn.map((card) => (
+                <Card
+                  key={card.id}
+                  word={card.word}
+                  isMatched={card.isMatched}
+                  isSelected={state.selectedCards.includes(card.id)}
+                  isMatchAnimation={state.activeMatchAnimations.has(card.pairId)}
+                  isFailAnimation={getIsFailAnimation(card.id)}
+                  onClick={() => handleCardClick(card.id)}
+                />
+              ))}
+            </div>
+            <div className="space-y-4">
+              {state.cards.rightColumn.map((card) => (
+                <Card
+                  key={card.id}
+                  word={card.word}
+                  isMatched={card.isMatched}
+                  isSelected={state.selectedCards.includes(card.id)}
+                  isMatchAnimation={state.activeMatchAnimations.has(card.pairId)}
+                  isFailAnimation={getIsFailAnimation(card.id)}
+                  onClick={() => handleCardClick(card.id)}
+                />
+              ))}
+            </div>
           </div>
-          <div className="space-y-4">
-            {state.cards.rightColumn.map((card) => (
-              <Card
-                key={card.id}
-                word={card.word}
-                isMatched={card.isMatched}
-                isSelected={state.selectedCards.includes(card.id)}
-                isMatchAnimation={state.activeMatchAnimations.has(card.pairId)}
-                isFailAnimation={getIsFailAnimation(card.id)}
-                onClick={() => handleCardClick(card.id)}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-center gap-4">
-        {state.progress.showRoundTransition ? (
-          state.progress.isComplete ? (
-            <>
-              {state.progress.currentLevel < 3 && (
-                <Button
-                  onClick={() =>
-                    handleLevelSelect(
-                      (state.progress.currentLevel + 1) as DifficultyLevel,
-                    )
-                  }
-                >
-                  Next Level
-                </Button>
-              )}
-              <Button onClick={() => resetGame()}>Reset Level</Button>
-            </>
-          ) : (
-            <Button onClick={handleContinue}>Continue</Button>
-          )
-        ) : (
-          <Button onClick={() => resetGame()}>Reset Level</Button>
         )}
       </div>
+
+      {
+        !state.isFetchingPairs && (
+          <div className="flex justify-center gap-4">
+            {state.progress.showRoundTransition ? (
+              state.progress.isComplete ? (
+                <>
+                  {state.progress.currentLevel < 3 && (
+                    <Button
+                      onClick={() =>
+                        handleLevelSelect(
+                          (state.progress.currentLevel + 1) as DifficultyLevel,
+                        )
+                      }
+                    >
+                      Next Level
+                    </Button>
+                  )}
+                  <Button onClick={() => resetGame()}>Reset Level</Button>
+                </>
+              ) : (
+                <Button onClick={handleContinue}>Continue</Button>
+              )
+            ) : (
+              <Button onClick={() => resetGame()}>Reset Level</Button>
+            )}
+          </div>
+        )
+      }
     </div>
   );
 }
