@@ -235,6 +235,8 @@ export function GameBoard() {
 
       if (firstCard.pairId === secondCard.pairId) {
         // Match found
+        dispatch({ type: "INCREMENT_MATCH_COUNT" });
+
         const matchKey = `match-${firstCard.pairId}`;
 
         dispatch({
@@ -261,8 +263,11 @@ export function GameBoard() {
           },
         );
 
+        const numRequiredMatchesRemaining = difficultySettings[state.progress.currentLevel].roundPairs[
+          state.progress.currentRound - 1
+        ] - (state.progress.roundMatchedPairs + 1);
         const animationDuration =
-          nextStateAfterSelectCard.progress.unusedPairs.length > 0
+          numRequiredMatchesRemaining >= 5
             ? 3000
             : 1000;
         const timeoutId = setTimeout(

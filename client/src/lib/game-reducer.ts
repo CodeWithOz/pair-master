@@ -32,6 +32,7 @@ type GameAction =
       payload: { pairs: ExtendedWordPair[]; level: DifficultyLevel };
     }
   | { type: "SELECT_CARD"; payload: { cardId: string; isLeftColumn: boolean } }
+  | { type: "INCREMENT_MATCH_COUNT" }
   | { type: "MARK_PAIR_MATCHED"; payload: { pairId: number, isAfterTransition: boolean } }
   | { type: "CLEAR_SELECTED_CARDS"; payload: { cardIds: string[] } }
   | {
@@ -89,6 +90,20 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       };
     }
 
+    case "INCREMENT_MATCH_COUNT": {
+      const newMatchedPairs = state.progress.matchedPairsInLevel + 1;
+      const newRoundMatchedPairs = state.progress.roundMatchedPairs + 1;
+
+      return {
+        ...state,
+        progress: {
+          ...state.progress,
+          matchedPairsInLevel: newMatchedPairs,
+          roundMatchedPairs: newRoundMatchedPairs,
+        },
+      };
+    }
+
     case "MARK_PAIR_MATCHED": {
       const { pairId, isAfterTransition } = action.payload;
 
@@ -130,14 +145,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         };
       }
 
-      const newMatchedPairs = state.progress.matchedPairsInLevel + 1;
-      const newRoundMatchedPairs = state.progress.roundMatchedPairs + 1;
       const currentRoundRequired = getCurrentRoundPairs(
         state.progress.currentLevel,
         state.progress.currentRound
       );
 
-      const isRoundComplete = newRoundMatchedPairs >= currentRoundRequired;
+      const isRoundComplete = state.progress.roundMatchedPairs >= currentRoundRequired;
       const isLastRoundOfLevel = isLastRound(
         state.progress.currentLevel,
         state.progress.currentRound
@@ -149,8 +162,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         cards: updatedCards,
         progress: {
           ...state.progress,
-          matchedPairsInLevel: newMatchedPairs,
-          roundMatchedPairs: newRoundMatchedPairs,
           showRoundTransition: isRoundComplete,
           isPaused: isRoundComplete,
           isComplete: levelComplete,
