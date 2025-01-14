@@ -9,11 +9,6 @@ export class WordDatabase extends Dexie {
 
     // Define schema and migrations
     this.version(1).stores({
-      wordPairs: '++id, german, english, difficulty'
-    });
-
-    // Migrate to version 2: remove difficulty column
-    this.version(2).stores({
       wordPairs: '++id, german, english'
     });
   }
@@ -37,7 +32,7 @@ export async function initializeDatabase(defaultPairs: WordPair[]) {
     const count = await db.wordPairs.count();
     if (count === 0) {
       console.log('Initializing database with default word pairs...');
-      // Remove difficulty from default pairs before adding
+      // Use only german and english fields from default pairs
       const pairsWithoutDifficulty = defaultPairs.map(({ german, english }) => ({
         german,
         english

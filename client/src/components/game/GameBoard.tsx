@@ -48,6 +48,29 @@ export function GameBoard() {
   const { toast } = useToast();
   const timeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const [, setLocation] = useLocation();
+  const workerRef = useRef<Worker | null>(null);
+
+  // Initialize web worker
+  useEffect(() => {
+    try {
+      workerRef.current = new Worker(new URL('../../workers/game.worker.ts', import.meta.url), {
+        type: 'module'
+      });
+
+      workerRef.current.onmessage = (event) => {
+        toast({
+          title: "Level Started",
+          description: event.data,
+        });
+      };
+
+      return () => {
+        workerRef.current?.terminate();
+      };
+    } catch (error) {
+      console.error('Error initializing web worker:', error);
+    }
+  }, [toast]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
@@ -264,6 +287,13 @@ export function GameBoard() {
   const handleLevelSelect = (level: DifficultyLevel) => {
     timeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
     timeoutsRef.current.clear();
+
+    // Send message to worker when level changes
+    try {
+      workerRef.current?.postMessage('getLevelStartMessage');
+    } catch (error) {
+      console.error('Error sending message to worker:', error);
+    }
 
     dispatch({
       type: 'CHANGE_LEVEL',
