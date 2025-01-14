@@ -148,23 +148,30 @@ export function canUnlockNextLevel(progress: GameProgress): boolean {
   );
 }
 
-export async function getWordPairsForLevel(level: DifficultyLevel): Promise<WordPair[]> {
-  const requiredPairs = difficultySettings[level].requiredPairs;
-  return await db.wordPairs
-    .reverse()
-    .limit(requiredPairs)
-    .toArray();
+let worker: Worker | null = null;
+
+function getWorker() {
+  if (!worker) {
+    worker = new Worker(new URL('./wordPairWorker.ts', import.meta.url), {
+      type: 'module'
+    });
+  }
+  return worker;
 }
 
 export async function getInitialShuffledPairs(level: DifficultyLevel): Promise<ExtendedWordPair[]> {
-  const levelPairs = await getWordPairsForLevel(level);
-  return shuffleArray(
-    levelPairs.map((pair) => ({
-      ...pair,
-      germanWordPairId: pair.id,
-      englishWordPairId: pair.id,
-    }))
-  );
+  const pairs = await db.wordPairs
+    .reverse()
+    .limit(difficultySettings[level].requiredPairs)
+    .toArray();
+    
+  return new Promise((resolve) => {
+    const worker = getWorker();
+    worker.onmessage = (e: MessageEvent) => {
+      resolve(e.data);
+    };
+    worker.postMessage({ level, pairs });
+  });
 }
 
 export function generateGameCards(
