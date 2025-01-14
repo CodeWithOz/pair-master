@@ -33,7 +33,7 @@ type GameAction =
     }
   | { type: "SELECT_CARD"; payload: { cardId: string; isLeftColumn: boolean } }
   | { type: "MARK_PAIR_MATCHED"; payload: { pairId: number } }
-  | { type: "CLEAR_SELECTED_PAIR"; payload: { cardIds: string[] } }
+  | { type: "CLEAR_SELECTED_CARDS"; payload: { cardIds: string[] } }
   | {
       type: "SET_ANIMATION";
       payload: {
@@ -247,7 +247,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       };
     }
 
-    case "CLEAR_SELECTED_PAIR": {
+    case "CLEAR_SELECTED_CARDS": {
       const { cardIds } = action.payload;
       return {
         ...state,

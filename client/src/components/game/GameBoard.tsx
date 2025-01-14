@@ -187,7 +187,7 @@ export function GameBoard() {
     });
 
     dispatch({
-      type: "CLEAR_SELECTED_PAIR",
+      type: "CLEAR_SELECTED_CARDS",
       payload: { cardIds: [firstCardId, secondCardId] },
     });
 
@@ -207,7 +207,15 @@ export function GameBoard() {
       return;
 
     const card = findCardInColumns(cardId);
-    if (!card || card.isMatched || state.selectedCards.includes(cardId)) return;
+    if (!card || card.isMatched) return;
+
+    if (state.selectedCards.includes(cardId)) {
+      dispatch({
+        type: "CLEAR_SELECTED_CARDS",
+        payload: { cardIds: [cardId] },
+      });
+      return;
+    }
 
     const isLeftColumn = isCardInLeftColumn(cardId);
     const selectCardAction = {
@@ -285,7 +293,7 @@ export function GameBoard() {
           });
 
           dispatch({
-            type: "CLEAR_SELECTED_PAIR",
+            type: "CLEAR_SELECTED_CARDS",
             payload: { cardIds: [firstId, cardId] },
           });
 
