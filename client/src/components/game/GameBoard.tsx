@@ -504,12 +504,7 @@ export function GameBoard() {
                     </Button>
                   )}
                   <Button
-                    onClick={() =>
-                      dispatch({
-                        type: "SET_RESET_CONFIRM",
-                        payload: { show: true },
-                      })
-                    }
+                    onClick={resetGame}
                   >
                     Reset Level
                   </Button>
