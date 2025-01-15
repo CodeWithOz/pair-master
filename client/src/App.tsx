@@ -38,7 +38,7 @@ function App() {
     <div className="min-h-screen bg-background">
       <Switch>
         <Route path="/" component={Home} />
-        <Route path="/:language/play" component={GameBoard} />
+        <Route path="/play" component={GameBoard} />
         <Route path="/manage-words" component={WordManagement} />
         <Route path="*">
           <Home />
