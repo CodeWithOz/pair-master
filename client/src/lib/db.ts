@@ -15,13 +15,18 @@ export class WordDatabase extends Dexie {
 
     // Define schema and migrations
     this.version(1).stores({
-      wordPairs: '++id, german, english, difficulty',
-      meta: 'key, value'
+      wordPairs: '++id, german, english, difficulty'
     });
 
     // Migrate to version 2: remove difficulty column
     this.version(2).stores({
       wordPairs: '++id, german, english'
+    });
+
+    // Add meta table
+    this.version(3).stores({
+      wordPairs: '++id, german, english',
+      meta: 'key, value'
     });
   }
 
