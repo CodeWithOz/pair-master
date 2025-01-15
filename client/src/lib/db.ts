@@ -24,8 +24,13 @@ export class WordDatabase extends Dexie {
   }
 
   // Helper method to bulk add word pairs without ids
-  async addWordPairs(wordPairs: CreateWordPair[]): Promise<number[]> {
+  async addWordPairs(wordPairs: CreateWordPair[]): Promise<number> {
     return await this.wordPairs.bulkAdd(wordPairs as any[]);
+  }
+
+  async getWordPairCount(): Promise<number> {
+    const count = await this.wordPairs.count();
+    return count;
   }
 }
 
