@@ -66,7 +66,11 @@ export function ExportWordsForm() {
       const jsonString = JSON.stringify(exportData)
         .replace(/}\s*,\s*{/g, "},\n  {")
         .replace("[", "[\n  ")
-        .replace(/}\s*]/, "}\n]");
+        .replace(/}\s*]/, "}\n]")
+        .replace(/{"english":/g, '{ english: ')
+        .replace(/,"german":/g, ', german: ')
+        .replace(/"}/g, '" }');
+
       await navigator.clipboard.writeText(jsonString);
 
       toast({
