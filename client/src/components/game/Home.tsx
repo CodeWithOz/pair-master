@@ -7,7 +7,7 @@ export function Home() {
   const [, setLocation] = useLocation();
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 min-h-screen flex flex-col justify-center">
       <h1 className="text-4xl font-bold text-center mb-12">Welcome to PairMaster!</h1>
       <div className="flex justify-center gap-4 max-w-xl mx-auto">
         <Button 
