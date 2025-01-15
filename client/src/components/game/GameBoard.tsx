@@ -392,16 +392,20 @@ export function GameBoard() {
       </div>
 
       <div className="relative max-w-2xl mx-auto mb-8">
-        {/* Round transition overlay */}
-        {!state.isFetchingPairs && state.progress.showRoundTransition && (
+        {/* Round transition and time's up overlays */}
+        {!state.isFetchingPairs && (state.progress.showRoundTransition || state.progress.remainingTime <= 0) && (
           <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-lg">
-            <p className="text-2xl font-bold text-green-600 mb-2">
-              {state.progress.isComplete
+            <p className={`text-2xl font-bold mb-2 ${state.progress.remainingTime <= 0 ? "text-red-600" : "text-green-600"}`}>
+              {state.progress.remainingTime <= 0
+                ? "You ran out of time!"
+                : state.progress.isComplete
                 ? "Congratulations!"
                 : "Nice work so far!"}
             </p>
             <p className="text-lg text-gray-900">
-              {state.progress.isComplete
+              {state.progress.remainingTime <= 0
+                ? "Try again or select a different level"
+                : state.progress.isComplete
                 ? "You beat this level!"
                 : "Ready to continue?"}
             </p>
