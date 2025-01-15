@@ -11,7 +11,11 @@ interface FormWordPair {
   german: string;
 }
 
-export function BulkImportForm() {
+interface BulkImportFormProps {
+  onImport?: () => void;
+}
+
+export function BulkImportForm({ onImport }: BulkImportFormProps) {
   const [pairs, setPairs] = useState<FormWordPair[]>([{ english: "", german: "" }]);
   const { toast } = useToast();
 

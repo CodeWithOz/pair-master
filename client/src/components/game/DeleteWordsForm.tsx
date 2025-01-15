@@ -8,7 +8,11 @@ import { db } from "@/lib/db";
 import { WordPair } from "@/lib/game-data";
 import { cn } from "@/lib/utils";
 
-export function DeleteWordsForm() {
+interface DeleteWordsFormProps {
+  onDelete?: () => void;
+}
+
+export function DeleteWordsForm({ onDelete }: DeleteWordsFormProps) {
   const [pairs, setPairs] = useState<WordPair[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [allSelected, setAllSelected] = useState(false);

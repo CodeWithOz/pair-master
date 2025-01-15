@@ -52,6 +52,8 @@ export function WordManagement() {
         english: data.english,
       };
       await db.addWordPair(wordPair);
+      const newCount = await db.getWordPairCount();
+      setWordPairCount(newCount);
 
       toast({
         title: "Word pair added",
@@ -69,11 +71,12 @@ export function WordManagement() {
 
   const [wordPairCount, setWordPairCount] = useState(0);
 
+  const fetchWordPairCount = async () => {
+    const count = await db.getWordPairCount();
+    setWordPairCount(count);
+  };
+
   useEffect(() => {
-    async function fetchWordPairCount() {
-      const count = await db.getWordPairCount();
-      setWordPairCount(count);
-    }
     fetchWordPairCount();
   }, []);
 
@@ -152,7 +155,7 @@ export function WordManagement() {
           <TabsContent value="bulk">
             <Card>
               <CardContent className="pt-6">
-                <BulkImportForm />
+                <BulkImportForm onImport={() => fetchWordPairCount()} />
               </CardContent>
             </Card>
           </TabsContent>
@@ -160,7 +163,7 @@ export function WordManagement() {
           <TabsContent value="delete">
             <Card>
               <CardContent className="pt-6">
-                <DeleteWordsForm />
+                <DeleteWordsForm onDelete={() => fetchWordPairCount()} />
               </CardContent>
             </Card>
           </TabsContent>
