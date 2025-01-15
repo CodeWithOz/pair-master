@@ -81,10 +81,6 @@ export function GameBoard() {
       timeoutId = setTimeout(() => {
         const newTime = state.progress.remainingTime - 1;
         if (newTime <= 0) {
-          toast({
-            title: "Time's Up!",
-            description: "Try again or select a different level.",
-          });
           dispatch({ type: "UPDATE_TIMER", payload: { newTime: 0 } });
         } else {
           dispatch({ type: "UPDATE_TIMER", payload: { newTime } });
@@ -519,11 +515,15 @@ export function GameBoard() {
             ) : (
               <Button
                 onClick={() => {
-                  dispatch({ type: "SET_PAUSE", payload: { isPaused: true } });
-                  dispatch({
-                    type: "SET_RESET_CONFIRM",
-                    payload: { show: true },
-                  })
+                  if (state.progress.remainingTime <= 0) {
+                    resetGame();
+                  } else {
+                    dispatch({ type: "SET_PAUSE", payload: { isPaused: true } });
+                    dispatch({
+                      type: "SET_RESET_CONFIRM",
+                      payload: { show: true },
+                    })
+                  }
                 }}
               >
                 Reset Level
