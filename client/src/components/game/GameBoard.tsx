@@ -1,6 +1,13 @@
 import { useReducer, useEffect, useRef, useCallback } from "react";
 import { Card } from "./Card";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useLocation } from "wouter";
 import { Home, Settings } from "lucide-react";
 import {
@@ -38,7 +45,8 @@ const initialState = {
   activeFailAnimations: new Set<string>(),
   currentRandomizedPairs: [],
   nextPairIndex: 0,
-  isFetchingPairs: false, // Added isFetchingPairs state
+  isFetchingPairs: false,
+  showResetConfirm: false, // New state for reset confirmation dialog
 };
 
 // Infer the state type from initialState
@@ -158,6 +166,7 @@ export function GameBoard() {
       });
     } finally {
       dispatch({ type: "SET_FETCHING_PAIRS", payload: { isFetching: false } });
+      dispatch({ type: "SET_RESET_CONFIRM", payload: { show: false } }); // Hide dialog after reset
     }
   }, [state.progress.currentLevel, toast]);
 
@@ -439,8 +448,46 @@ export function GameBoard() {
         )}
       </div>
 
-      {
-        !state.isFetchingPairs && (
+      {/* Reset confirmation dialog */}
+      <Dialog
+        open={state.showResetConfirm}
+        onOpenChange={(open) => {
+          dispatch({ type: "SET_RESET_CONFIRM", payload: { show: open } });
+          dispatch({ type: "SET_PAUSE", payload: { isPaused: open } });
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Level</DialogTitle>
+            <DialogDescription>
+              You will lose your progress... are you sure you want to reset the
+              level?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-4 mt-4">
+            <Button
+              variant="secondary"
+              className="bg-black text-white hover:bg-black/90"
+              onClick={() => {
+                dispatch({ type: "SET_RESET_CONFIRM", payload: { show: false } });
+                dispatch({ type: "SET_PAUSE", payload: { isPaused: false } });
+              }}
+            >
+              Go back
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={resetGame}
+            >
+              Reset Level
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className="container mx-auto px-4 py-8">
+        {!state.isFetchingPairs && (
           <div className="flex justify-center gap-4">
             {state.progress.showRoundTransition ? (
               state.progress.isComplete ? (
@@ -456,17 +503,35 @@ export function GameBoard() {
                       Next Level
                     </Button>
                   )}
-                  <Button onClick={() => resetGame()}>Reset Level</Button>
+                  <Button
+                    onClick={() =>
+                      dispatch({
+                        type: "SET_RESET_CONFIRM",
+                        payload: { show: true },
+                      })
+                    }
+                  >
+                    Reset Level
+                  </Button>
                 </>
               ) : (
                 <Button onClick={handleContinue}>Continue</Button>
               )
             ) : (
-              <Button onClick={() => resetGame()}>Reset Level</Button>
+              <Button
+                onClick={() =>
+                  dispatch({
+                    type: "SET_RESET_CONFIRM",
+                    payload: { show: true },
+                  })
+                }
+              >
+                Reset Level
+              </Button>
             )}
           </div>
-        )
-      }
+        )}
+      </div>
     </div>
   );
 }

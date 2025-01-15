@@ -23,6 +23,7 @@ interface GameState {
   currentRandomizedPairs: ExtendedWordPair[];
   nextPairIndex: number;
   isFetchingPairs: boolean;
+  showResetConfirm: boolean; // Add this new state
 }
 
 // Action types
@@ -33,7 +34,7 @@ type GameAction =
     }
   | { type: "SELECT_CARD"; payload: { cardId: string; isLeftColumn: boolean } }
   | { type: "INCREMENT_MATCH_COUNT" }
-  | { type: "MARK_PAIR_MATCHED"; payload: { pairId: number, isAfterTransition: boolean } }
+  | { type: "MARK_PAIR_MATCHED"; payload: { pairId: number; isAfterTransition: boolean } }
   | { type: "CLEAR_SELECTED_CARDS"; payload: { cardIds: string[] } }
   | {
       type: "SET_ANIMATION";
@@ -47,7 +48,9 @@ type GameAction =
   | { type: "CHANGE_LEVEL"; payload: { level: DifficultyLevel } }
   | { type: "RESET_LEVEL"; payload: { pairs: ExtendedWordPair[] } }
   | { type: "START_NEXT_ROUND" }
-  | { type: "SET_FETCHING_PAIRS"; payload: { isFetching: boolean } };
+  | { type: "SET_FETCHING_PAIRS"; payload: { isFetching: boolean } }
+  | { type: "SET_RESET_CONFIRM"; payload: { show: boolean } }
+  | { type: "SET_PAUSE"; payload: { isPaused: boolean } };
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
@@ -63,8 +66,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const remainingPairs = roundPairs.slice(displayCount);
 
       // Initialize randomized pairs
-      const { randomizedPairs, remainingUnused } =
-        createRandomizedPairs(remainingPairs);
+      const { randomizedPairs, remainingUnused } = createRandomizedPairs(remainingPairs);
 
       return {
         ...state,
@@ -87,6 +89,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         activeFailAnimations: new Set(),
         currentRandomizedPairs: randomizedPairs,
         nextPairIndex: 0,
+        showResetConfirm: false, // Initialize showResetConfirm
       };
     }
 
@@ -324,6 +327,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         selectedCards: [],
         activeMatchAnimations: new Set(),
         activeFailAnimations: new Set(),
+        showResetConfirm: false, // Initialize showResetConfirm
       };
     }
 
@@ -362,6 +366,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         activeFailAnimations: new Set(),
         currentRandomizedPairs: randomizedPairs,
         nextPairIndex: 0,
+        showResetConfirm: false, // Initialize showResetConfirm
       };
     }
 
@@ -369,6 +374,23 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return {
         ...state,
         isFetchingPairs: action.payload.isFetching,
+      };
+    }
+
+    case "SET_RESET_CONFIRM": {
+      return {
+        ...state,
+        showResetConfirm: action.payload.show,
+      };
+    }
+
+    case "SET_PAUSE": {
+      return {
+        ...state,
+        progress: {
+          ...state.progress,
+          isPaused: action.payload.isPaused,
+        },
       };
     }
 
