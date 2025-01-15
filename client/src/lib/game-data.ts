@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { shuffleArray } from "./utils";
 import { db } from "./db";
 
@@ -28,20 +27,20 @@ export type DifficultyLevel = keyof typeof difficultyLevels;
 
 export const difficultySettings = {
   1: { 
-    timeLimit: 180, 
-    requiredPairs: 15, 
+    timeLimit: 180,
+    getNumRequiredPairs: () => difficultySettings[1 as DifficultyLevel].roundPairs.reduce((sum, numPairs) => sum + numPairs, 0),
     displayedPairs: 5,
     roundPairs: [5, 5, 5] 
   },
   2: { 
-    timeLimit: 150, 
-    requiredPairs: 20, 
+    timeLimit: 150,
+    getNumRequiredPairs: () => difficultySettings[2 as DifficultyLevel].roundPairs.reduce((sum, numPairs) => sum + numPairs, 0),
     displayedPairs: 5,
     roundPairs: [5, 7, 8]
   },
   3: { 
-    timeLimit: 120, 
-    requiredPairs: 25, 
+    timeLimit: 120,
+    getNumRequiredPairs: () => difficultySettings[3 as DifficultyLevel].roundPairs.reduce((sum, numPairs) => sum + numPairs, 0),
     displayedPairs: 5,
     roundPairs: [7, 8, 10]
   }
@@ -142,7 +141,7 @@ export function isLevelUnlocked(progress: GameProgress, level: DifficultyLevel):
 export function canUnlockNextLevel(progress: GameProgress): boolean {
   const nextLevel = (progress.currentLevel + 1) as DifficultyLevel;
   return (
-    progress.matchedPairsInLevel >= difficultySettings[progress.currentLevel].requiredPairs &&
+    progress.matchedPairsInLevel >= difficultySettings[progress.currentLevel].getNumRequiredPairs() &&
     nextLevel in difficultyLevels &&
     progress.isComplete
   );
@@ -166,9 +165,9 @@ export async function getInitialShuffledPairs(level: DifficultyLevel): Promise<E
     const worker = getWorker();
     worker.onmessage = (e: MessageEvent) => {
       const shuffledPairs = e.data as ExtendedWordPair[];
-      resolve(shuffledPairs.slice(0, difficultySettings[level].requiredPairs));
+      resolve(shuffledPairs.slice(0, difficultySettings[level].getNumRequiredPairs()));
     };
-    worker.postMessage({ level, pairs });
+    worker.postMessage({ pairs });
   });
 }
 

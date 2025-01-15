@@ -378,7 +378,7 @@ export function GameBoard() {
         </div>
         <div className="text-xs text-gray-500">
           Total Matches: {state.progress.matchedPairsInLevel}/
-          {difficultySettings[state.progress.currentLevel].requiredPairs}
+          {difficultySettings[state.progress.currentLevel].getNumRequiredPairs()}
         </div>
       </div>
 

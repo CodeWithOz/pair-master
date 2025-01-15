@@ -11,14 +11,11 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 self.onmessage = async (e: MessageEvent) => {
-  const { level, pairs } = e.data;
-  
-  // Get word pairs for level
-  const requiredPairs = pairs.slice(0, level * 15);
+  const { pairs } = e.data;
   
   // Convert to extended pairs and shuffle
   const extendedPairs = shuffleArray(
-    requiredPairs.map((pair: WordPair) => ({
+    pairs.map((pair: WordPair) => ({
       ...pair,
       germanWordPairId: pair.id,
       englishWordPairId: pair.id,
