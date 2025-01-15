@@ -19,12 +19,13 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
   const [pairs, setPairs] = useState<FormWordPair[]>([{ english: "", german: "" }]);
   const { toast } = useToast();
 
-  const isValid = pairs.every(pair => 
-    pair.english.trim() !== "" && 
-    pair.german.trim() !== "" && 
-    pair.english.length <= 30 && 
-    pair.german.length <= 30
-  );
+  const isValidPair = (pair: FormWordPair) => 
+      pair.english.trim() !== "" && 
+      pair.german.trim() !== "" && 
+      pair.english.length <= 30 && 
+      pair.german.length <= 30;
+
+  const isValidForm = pairs.every(isValidPair);
 
   const addRow = (index: number) => {
     const newPairs = [...pairs];
@@ -50,7 +51,7 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid) return;
+    if (!isValidForm) return;
 
     try {
       const wordPairs: CreateWordPair[] = pairs.map(pair => ({
@@ -124,10 +125,10 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
 
       <Button 
         type="submit" 
-        disabled={!isValid}
+        disabled={!isValidForm}
         className="w-full"
       >
-        Import Word Pairs
+        Import {pairs.filter(isValidPair).length} Word Pairs
       </Button>
     </form>
   );
