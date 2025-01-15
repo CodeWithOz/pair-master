@@ -12,7 +12,7 @@ interface FormWordPair {
 }
 
 interface BulkImportFormProps {
-  onImport?: () => void;
+  onImport: () => void;
 }
 
 export function BulkImportForm({ onImport }: BulkImportFormProps) {
@@ -65,6 +65,8 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
         description: `Added ${pairs.length} word pairs to the database`,
       });
       setPairs([{ english: "", german: "" }]);
+
+      onImport();
     } catch (error) {
       toast({
         title: "Error",

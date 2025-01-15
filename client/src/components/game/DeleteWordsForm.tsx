@@ -9,7 +9,7 @@ import { WordPair } from "@/lib/game-data";
 import { cn } from "@/lib/utils";
 
 interface DeleteWordsFormProps {
-  onDelete?: () => void;
+  onDelete: () => void;
 }
 
 export function DeleteWordsForm({ onDelete }: DeleteWordsFormProps) {
@@ -73,6 +73,8 @@ export function DeleteWordsForm({ onDelete }: DeleteWordsFormProps) {
         title: "Success",
         description: "Successfully deleted selected word pairs",
       });
+
+      onDelete();
     } catch (error) {
       toast({
         title: "Error",
