@@ -49,17 +49,12 @@ export class WordDatabase extends Dexie {
 export const db = new WordDatabase();
 
 // Initialize database with default words if empty
-export async function initializeDatabase(defaultPairs: WordPair[]) {
+export async function initializeDatabase(defaultPairs: CreateWordPair[]) {
   try {
     const count = await db.wordPairs.count();
     if (count === 0) {
       console.log('Initializing database with default word pairs...');
-      // Remove difficulty from default pairs before adding
-      const pairsWithoutDifficulty = defaultPairs.map(({ german, english }) => ({
-        german,
-        english
-      }));
-      await db.addWordPairs(pairsWithoutDifficulty);
+      await db.addWordPairs(defaultPairs);
       console.log('Database initialized successfully');
     } else {
       console.log('Database already contains word pairs, skipping initialization');
