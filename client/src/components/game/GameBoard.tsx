@@ -514,12 +514,13 @@ export function GameBoard() {
               )
             ) : (
               <Button
-                onClick={() =>
+                onClick={() => {
+                  dispatch({ type: "SET_PAUSE", payload: { isPaused: true } });
                   dispatch({
                     type: "SET_RESET_CONFIRM",
                     payload: { show: true },
                   })
-                }
+                }}
               >
                 Reset Level
               </Button>
