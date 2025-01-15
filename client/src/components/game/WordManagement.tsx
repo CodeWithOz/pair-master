@@ -2,7 +2,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,11 +25,11 @@ const wordPairSchema = z.object({
   german: z
     .string()
     .min(1, "German word is required")
-    .regex(/^[a-zA-ZäöüßÄÖÜ\s-]*$/, "Only letters, spaces, and hyphens are allowed"),
+    .max(30, "30 characters or less"),
   english: z
     .string()
     .min(1, "English word is required")
-    .regex(/^[a-zA-Z\s-]*$/, "Only letters, spaces, and hyphens are allowed"),
+    .max(30, "30 characters or less"),
 });
 
 export function WordManagement() {
