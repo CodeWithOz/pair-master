@@ -21,6 +21,7 @@ import { BulkImportForm } from "./BulkImportForm";
 import { DeleteWordsForm } from "./DeleteWordsForm";
 import { CreateWordPair } from "@/lib/game-data";
 import { useEffect, useState } from "react";
+import { ExportWordsForm } from "./ExportWordsForm";
 
 const wordPairSchema = z.object({
   german: z
@@ -107,9 +108,10 @@ export function WordManagement() {
 
       <div className="max-w-4xl mx-auto">
         <Tabs defaultValue="single">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="single">Add Single Pair</TabsTrigger>
             <TabsTrigger value="bulk">Bulk Import</TabsTrigger>
+            <TabsTrigger value="export">Export Words</TabsTrigger>
             <TabsTrigger value="delete">Delete Words</TabsTrigger>
           </TabsList>
 
@@ -157,6 +159,14 @@ export function WordManagement() {
             <Card>
               <CardContent className="pt-6">
                 <BulkImportForm onImport={() => fetchWordPairCount()} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="export">
+            <Card>
+              <CardContent className="pt-6">
+                <ExportWordsForm />
               </CardContent>
             </Card>
           </TabsContent>
