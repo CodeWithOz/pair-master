@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Home } from "lucide-react";
+import { Home, AlertTriangle } from "lucide-react";
 import { useLocation } from "wouter";
 import { db } from "@/lib/db";
 import { BulkImportForm } from "./BulkImportForm";
@@ -66,6 +66,17 @@ export function WordManagement() {
     }
   }
 
+  const [wordPairCount, setWordPairCount] = React.useState(0);
+
+  React.useEffect(() => {
+    async function fetchWordPairCount() {
+      const count = await db.getWordPairCount();
+      setWordPairCount(count);
+    }
+    fetchWordPairCount();
+  }, []);
+
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8 max-w-4xl mx-auto flex justify-between items-center">
@@ -78,6 +89,15 @@ export function WordManagement() {
         </Button>
       </div>
       <h1 className="text-2xl font-bold mb-8">Word Pair Management</h1>
+      <p>Total number of word pairs: {wordPairCount}</p>
+      <p>You need at least 120 word pairs for the game to work properly. If you have less than that, you will run out of words on some rounds.</p>
+      {wordPairCount < 120 && (
+        <p className="flex items-center">
+          <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
+          You don't have enough word pairs for the game to work properly. Please add {120 - wordPairCount} more pairs.
+        </p>
+      )}
+      {wordPairCount >= 120 && <p>Manage your word pairs using the options below.</p>}
 
       <div className="max-w-4xl mx-auto">
         <Tabs defaultValue="single">
