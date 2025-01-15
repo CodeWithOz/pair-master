@@ -87,9 +87,10 @@ export function WordManagement() {
         <Button 
           onClick={() => setLocation("/")} 
           variant="ghost"
-          className="shadow-[0_0_0_1px_hsl(var(--border))]"
+          size="icon"
+          className="rounded-full shadow-[0_0_0_1px_hsl(var(--border))]"
         >
-          <Home className="h-6 w-6 inline-block mr-2"/> Home
+          <Home className="h-6 w-6"/>
         </Button>
       </div>
       <h1 className="text-2xl font-bold mb-8">Word Pair Management</h1>

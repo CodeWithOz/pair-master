@@ -350,16 +350,21 @@ export function GameBoard() {
         <Button
           onClick={() => setLocation("/")}
           variant="ghost"
-          className="shadow-[0_0_0_1px_hsl(var(--border))]"
+          size="icon"
+          className="rounded-full shadow-[0_0_0_1px_hsl(var(--border))]"
         >
-          <Home className="h-6 w-6 inline-block mr-2" /> Home
+          <Home className="h-6 w-6" />
         </Button>
+        <div className="text-2xl font-bold">
+          {formatTime(state.progress.remainingTime)}
+        </div>
         <Button
           onClick={() => setLocation("/manage-words")}
           variant="ghost"
-          className="shadow-[0_0_0_1px_hsl(var(--border))]"
+          size="icon"
+          className="rounded-full shadow-[0_0_0_1px_hsl(var(--border))]"
         >
-          <Settings className="h-6 w-6" /> Settings
+          <Settings className="h-6 w-6" />
         </Button>
       </div>
 
@@ -369,9 +374,6 @@ export function GameBoard() {
       />
 
       <div className="text-center mb-4">
-        <div className="text-2xl font-bold">
-          Time: {formatTime(state.progress.remainingTime)}
-        </div>
         <div className="text-sm text-gray-600">
           Round {state.progress.currentRound}/3 - Matches:{" "}
           {state.progress.roundMatchedPairs}/
