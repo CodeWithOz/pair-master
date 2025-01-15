@@ -31,22 +31,22 @@ export type DifficultyLevel = keyof typeof difficultyLevels;
 
 export const difficultySettings = {
   1: { 
-    timeLimit: 180,
+    timeLimit: 105,
     getNumRequiredPairs: () => difficultySettings[1 as DifficultyLevel].roundPairs.reduce((sum, numPairs) => sum + numPairs, 0),
     displayedPairs: 5,
-    roundPairs: [5, 5, 5] 
+    roundPairs: [15, 20, 25] 
   },
   2: { 
-    timeLimit: 150,
+    timeLimit: 105,
     getNumRequiredPairs: () => difficultySettings[2 as DifficultyLevel].roundPairs.reduce((sum, numPairs) => sum + numPairs, 0),
     displayedPairs: 5,
-    roundPairs: [5, 7, 8]
+    roundPairs: [20, 25, 45]
   },
   3: { 
-    timeLimit: 120,
+    timeLimit: 105,
     getNumRequiredPairs: () => difficultySettings[3 as DifficultyLevel].roundPairs.reduce((sum, numPairs) => sum + numPairs, 0),
     displayedPairs: 5,
-    roundPairs: [7, 8, 10]
+    roundPairs: [30, 40, 50]
   }
 } as const;
 
