@@ -1,15 +1,22 @@
 import Dexie, { Table } from 'dexie';
 import { WordPair, CreateWordPair } from './game-data';
 
+interface MetaItem {
+  key: string;
+  value: string;
+}
+
 export class WordDatabase extends Dexie {
-  wordPairs!: Table<WordPair, number>; // second type parameter is the key type
+  wordPairs!: Table<WordPair, number>;
+  meta!: Table<MetaItem, string>;
 
   constructor() {
     super('WordGameDB');
 
     // Define schema and migrations
     this.version(1).stores({
-      wordPairs: '++id, german, english, difficulty'
+      wordPairs: '++id, german, english, difficulty',
+      meta: 'key, value'
     });
 
     // Migrate to version 2: remove difficulty column
