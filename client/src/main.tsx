@@ -7,7 +7,7 @@ import LogRocket from 'logrocket';
 import App from './App';
 import "./index.css";
 
-LogRocket.init('your-app-id');
+LogRocket.init('personal-s2guh/pairmaster');
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
