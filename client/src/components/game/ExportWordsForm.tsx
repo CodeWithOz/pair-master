@@ -63,7 +63,11 @@ export function ExportWordsForm() {
         german: pair.german,
       }));
 
-      await navigator.clipboard.writeText(JSON.stringify(exportData, null, 2));
+      const jsonString = JSON.stringify(exportData)
+        .replace(/}\s*,\s*{/g, "},\n  {")
+        .replace("[", "[\n  ")
+        .replace(/}\s*]/, "}\n]");
+      await navigator.clipboard.writeText(jsonString);
 
       toast({
         title: "Success",
