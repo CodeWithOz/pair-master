@@ -1,5 +1,5 @@
 
-import { DifficultyLevel, WordPair, ExtendedWordPair } from './game-data';
+import { ExtendedWordPair, WebWorkerMessage } from './game-data';
 
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
@@ -11,11 +11,11 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 self.onmessage = async (e: MessageEvent) => {
-  const { pairs } = e.data;
+  const { pairs } = e.data as WebWorkerMessage;
   
   // Convert to extended pairs and shuffle
-  const extendedPairs = shuffleArray(
-    pairs.map((pair: WordPair) => ({
+  const extendedPairs: ExtendedWordPair[] = shuffleArray(
+    pairs.map((pair) => ({
       ...pair,
       germanWordPairId: pair.id,
       englishWordPairId: pair.id,

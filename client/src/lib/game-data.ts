@@ -17,6 +17,10 @@ export interface ExtendedWordPair extends WordPair {
   englishWordPairId: number;
 }
 
+export interface WebWorkerMessage {
+  pairs: WordPair[];
+}
+
 export const difficultyLevels = {
   1: "Easy",
   2: "Medium",
@@ -167,7 +171,7 @@ export async function getInitialShuffledPairs(level: DifficultyLevel): Promise<E
       const shuffledPairs = e.data as ExtendedWordPair[];
       resolve(shuffledPairs.slice(0, difficultySettings[level].getNumRequiredPairs()));
     };
-    worker.postMessage({ pairs });
+    worker.postMessage({ pairs } satisfies WebWorkerMessage);
   });
 }
 
