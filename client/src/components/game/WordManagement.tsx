@@ -22,8 +22,6 @@ import { DeleteWordsForm } from "./DeleteWordsForm";
 import { CreateWordPair } from "@/lib/game-data";
 import { useEffect, useState } from "react";
 import { ExportWordsForm } from "./ExportWordsForm";
-import {ScrollArea} from "@/components/ui/scroll-area"
-
 
 const wordPairSchema = z.object({
   german: z
@@ -110,14 +108,12 @@ export function WordManagement() {
 
       <div className="max-w-4xl mx-auto">
         <Tabs defaultValue="single">
-          <ScrollArea className="w-full" orientation="horizontal">
-            <TabsList className="w-full flex-none h-10">
-              <TabsTrigger className="flex-none" value="single">Add Single Pair</TabsTrigger>
-              <TabsTrigger className="flex-none" value="bulk">Bulk Import</TabsTrigger>
-              <TabsTrigger className="flex-none" value="export">Export Words</TabsTrigger>
-              <TabsTrigger className="flex-none" value="delete">Delete Words</TabsTrigger>
-            </TabsList>
-          </ScrollArea>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="single">Add Single Pair</TabsTrigger>
+            <TabsTrigger value="bulk">Bulk Import</TabsTrigger>
+            <TabsTrigger value="export">Export Words</TabsTrigger>
+            <TabsTrigger value="delete">Delete Words</TabsTrigger>
+          </TabsList>
 
           <TabsContent value="single">
             <Card>
