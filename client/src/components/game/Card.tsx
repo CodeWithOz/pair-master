@@ -59,7 +59,7 @@ export function Card({
   return (
     <ShadcnCard
       className={cn(
-        "flex items-center justify-center p-5 cursor-pointer min-h-[60px] rounded-[16px] border-2 border-b-4",
+        "flex items-center justify-center p-2 cursor-pointer min-h-[80px] rounded-[16px] border-2 border-b-4",
         styles.background,
         styles.border,
         isMatched && "cursor-default",
@@ -69,7 +69,7 @@ export function Card({
       onClick={onClick}
     >
       <span className={'text-responsive-sm ' + cn(
-        "font-medium transition-colors duration-200",
+        "text-center font-medium transition-colors duration-200",
         styles.text
       )}>
         {word}
