@@ -72,7 +72,7 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
         return;
       }
 
-      await db.addWordPairs(parsed);
+      await db.addWordPairs(validation.data);
       toast({
         title: "Success",
         description: `Added ${parsed.length} word pairs to the database`,
@@ -81,7 +81,7 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
       setJsonError(null);
       onImport();
     } catch (error) {
-      setJsonError("Invalid JSON format");
+      setJsonError("Invalid format. Please check your JSON structure.");
       toast({
         title: "Error",
         description: "Failed to import word pairs",
