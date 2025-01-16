@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,6 +6,17 @@ import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/db";
 import { WordPair } from "@/lib/game-data";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface DeleteWordsFormProps {
   onDelete: () => void;
@@ -64,7 +74,7 @@ export function DeleteWordsForm({ onDelete }: DeleteWordsFormProps) {
         const idsToDelete = allSelected 
           ? pairs.filter(pair => !exceptions.has(pair.id)).map(pair => pair.id)
           : Array.from(selectedIds);
-        
+
         await db.wordPairs.bulkDelete(idsToDelete);
         setPairs(pairs.filter(pair => !idsToDelete.includes(pair.id)));
       }
@@ -126,13 +136,35 @@ export function DeleteWordsForm({ onDelete }: DeleteWordsFormProps) {
         </div>
       </ScrollArea>
 
-      <Button 
-        onClick={handleDelete} 
-        disabled={!anySelected}
-        className="w-full bg-red-600 hover:bg-red-700 text-white"
-      >
-        Delete Selection
-      </Button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button 
+            disabled={!anySelected}
+            className="w-full bg-red-600 hover:bg-red-700 text-white"
+          >
+            Delete Selection
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. The selected word pairs will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-black hover:bg-gray-900 text-white">
+              Go back
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Yes, proceed
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
