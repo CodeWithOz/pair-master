@@ -67,8 +67,6 @@ export function ExportWordsForm() {
         .replace(/}\s*,\s*{/g, "},\n  {")
         .replace("[", "[\n  ")
         .replace(/}\s*]/, "}\n]")
-        .replace(/{"english":/g, '{ english: ')
-        .replace(/,"german":/g, ', german: ')
         .replace(/"}/g, '" }');
 
       await navigator.clipboard.writeText(jsonString);
