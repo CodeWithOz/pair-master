@@ -373,22 +373,6 @@ export function GameBoard() {
         onSelectLevel={handleLevelSelect}
       />
 
-      <div className="text-center mb-4">
-        <div className="text-sm text-gray-600">
-          Round {state.progress.currentRound}/3 - Matches:{" "}
-          {state.progress.roundMatchedPairs}/
-          {
-            difficultySettings[state.progress.currentLevel].roundPairs[
-              state.progress.currentRound - 1
-            ]
-          }
-        </div>
-        <div className="text-xs text-gray-500">
-          Total Matches: {state.progress.matchedPairsInLevel}/
-          {difficultySettings[state.progress.currentLevel].getNumRequiredPairs()}
-        </div>
-      </div>
-
       <div className="relative max-w-2xl mx-auto mb-8">
         {/* Round transition and time's up overlays */}
         {!state.isFetchingPairs && (state.progress.showRoundTransition || state.progress.remainingTime <= 0) && (
@@ -488,7 +472,7 @@ export function GameBoard() {
         </DialogContent>
       </Dialog>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4">
         {!state.isFetchingPairs && (
           <div className="flex justify-center gap-4">
             {state.progress.showRoundTransition ? (
