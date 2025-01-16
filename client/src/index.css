@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .text-responsive {
+    font-size: clamp(1rem, 0.8rem + 1vw, 1.5rem);
+  }
+  
+  .text-responsive-lg {
+    font-size: clamp(1.25rem, 1rem + 1.5vw, 2rem);
+  }
+  
+  .text-responsive-xl {
+    font-size: clamp(1.5rem, 1.25rem + 2vw, 2.5rem);
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
