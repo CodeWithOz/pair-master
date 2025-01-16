@@ -3,7 +3,11 @@
 @tailwind utilities;
 
 @layer utilities {
-  .text-responsive {
+  .text-responsive-sm {
+    font-size: clamp(0.875rem, 0.5rem + 0.8vw, 1rem);
+  }
+  
+  .text-responsive-base {
     font-size: clamp(1rem, 0.8rem + 1vw, 1.5rem);
   }
   

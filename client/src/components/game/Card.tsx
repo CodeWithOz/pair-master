@@ -68,8 +68,8 @@ export function Card({
       )}
       onClick={onClick}
     >
-      <span className={cn(
-        "text-lg font-medium transition-colors duration-200",
+      <span className={'text-responsive-sm ' + cn(
+        "font-medium transition-colors duration-200",
         styles.text
       )}>
         {word}
