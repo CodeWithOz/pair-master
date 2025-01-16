@@ -100,7 +100,7 @@ export function WordManagement() {
         {wordPairCount < 120 && (
           <p>
             <AlertTriangle className="inline h-5 w-5 mr-2 text-red-500" />
-            Your word pairs are not enough for the game to work properly. Please add {120 - wordPairCount} more pairs.
+            Available word pairs are not enough for the game to work properly. Please add {120 - wordPairCount} more pairs.
           </p>
         )}
         {wordPairCount >= 120 && <p>Manage your word pairs using the options below.</p>}
