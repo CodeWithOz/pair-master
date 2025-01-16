@@ -32,11 +32,11 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
   const [jsonError, setJsonError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const isValidPair = (pair: FormWordPair) => 
-      pair.english.trim() !== "" && 
-      pair.german.trim() !== "" && 
-      pair.english.length <= 30 && 
-      pair.german.length <= 30;
+  const isValidPair = (pair: FormWordPair) =>
+    pair.english.trim() !== "" &&
+    pair.german.trim() !== "" &&
+    pair.english.length <= 30 &&
+    pair.german.length <= 30;
 
   const isValidForm = pairs.every(isValidPair);
 
@@ -95,7 +95,7 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
     if (!isValidForm) return;
 
     try {
-      const wordPairs: CreateWordPair[] = pairs.map(pair => ({
+      const wordPairs: CreateWordPair[] = pairs.map((pair) => ({
         english: pair.english.trim(),
         german: pair.german.trim(),
       }));
@@ -131,17 +131,17 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
             <div className="w-20"></div>
           </div>
 
-          <ScrollArea className="h-[220px] border rounded-md">
+          <ScrollArea className="max-h-[220px] border rounded-md overflow-y-auto">
             <div className="p-4 space-y-4">
               {pairs.map((pair, index) => (
                 <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-4">
-                  <Input 
+                  <Input
                     value={pair.english}
                     onChange={(e) => handleChange(index, "english", e.target.value)}
                     maxLength={30}
                     placeholder="English word"
                   />
-                  <Input 
+                  <Input
                     value={pair.german}
                     onChange={(e) => handleChange(index, "german", e.target.value)}
                     maxLength={30}
@@ -173,11 +173,7 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
             </div>
           </ScrollArea>
 
-          <Button 
-            type="submit" 
-            disabled={!isValidForm}
-            className="w-full"
-          >
+          <Button type="submit" disabled={!isValidForm} className="w-full">
             Import {pairs.filter(isValidPair).length} Word Pairs
           </Button>
         </form>
@@ -185,14 +181,10 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
 
       <TabsContent value="json" className="space-y-4">
         <div className="space-y-2">
-          <p className="text-sm">
-            Paste your word pairs in JSON format:
-          </p>
-          <p className="text-xs font-mono">
-            [{"{"}"english": "word", "german": "wort"{"}"}]
-          </p>
+          <p className="text-sm">Paste your word pairs in JSON format:</p>
+          <p className="text-xs font-mono">[{"{"}"english": "word", "german": "wort"{"}"}]</p>
         </div>
-        <Textarea 
+        <Textarea
           value={jsonInput}
           onChange={(e) => {
             setJsonInput(e.target.value);
@@ -201,14 +193,8 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
           placeholder='[{"english": "hello", "german": "hallo"}]'
           className="min-h-[200px] font-mono"
         />
-        {jsonError && (
-          <p className="text-sm text-red-500">{jsonError}</p>
-        )}
-        <Button 
-          onClick={handleJsonImport}
-          disabled={!jsonInput}
-          className="w-full"
-        >
+        {jsonError && <p className="text-sm text-red-500">{jsonError}</p>}
+        <Button onClick={handleJsonImport} disabled={!jsonInput} className="w-full">
           Import JSON
         </Button>
       </TabsContent>
