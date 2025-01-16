@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { db } from "@/lib/db";
 import { CreateWordPair } from "@/lib/game-data";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import * as z from "zod";
 
 interface FormWordPair {
@@ -66,7 +66,7 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
     try {
       const parsed = JSON.parse(jsonInput);
       const validation = wordPairArraySchema.safeParse(parsed);
-      
+
       if (!validation.success) {
         setJsonError("Invalid format. Please check your JSON structure.");
         return;
@@ -125,49 +125,53 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
 
       <TabsContent value="form">
         <form onSubmit={handleFormSubmit} className="space-y-6">
-          <div className="grid grid-cols-[1fr_1fr_auto] gap-4">
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-4 mb-2">
             <div className="font-medium text-center">English</div>
             <div className="font-medium text-center">German</div>
             <div className="w-20"></div>
-
-            {pairs.map((pair, index) => (
-              <div key={index} className="contents">
-                <Input 
-                  value={pair.english}
-                  onChange={(e) => handleChange(index, "english", e.target.value)}
-                  maxLength={30}
-                  placeholder="English word"
-                />
-                <Input 
-                  value={pair.german}
-                  onChange={(e) => handleChange(index, "german", e.target.value)}
-                  maxLength={30}
-                  placeholder="German word"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => addRow(index)}
-                    className="text-green-600 hover:bg-green-100"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeRow(index)}
-                    className="text-red-600 hover:bg-red-100"
-                    disabled={pairs.length === 1}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
           </div>
+
+          <ScrollArea className="h-[220px] border rounded-md">
+            <div className="p-4 space-y-4">
+              {pairs.map((pair, index) => (
+                <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-4">
+                  <Input 
+                    value={pair.english}
+                    onChange={(e) => handleChange(index, "english", e.target.value)}
+                    maxLength={30}
+                    placeholder="English word"
+                  />
+                  <Input 
+                    value={pair.german}
+                    onChange={(e) => handleChange(index, "german", e.target.value)}
+                    maxLength={30}
+                    placeholder="German word"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => addRow(index)}
+                      className="text-green-600 hover:bg-green-100"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeRow(index)}
+                      className="text-red-600 hover:bg-red-100"
+                      disabled={pairs.length === 1}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
 
           <Button 
             type="submit" 
