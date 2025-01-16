@@ -83,8 +83,8 @@ export function WordManagement() {
 
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8 max-w-4xl mx-auto flex justify-between items-center">
+    <div className="container max-w-4xl mx-auto px-4 py-8">
+      <div className="mb-8 flex justify-between items-center">
         <Button 
           onClick={() => setLocation("/")} 
           variant="ghost"
@@ -106,7 +106,7 @@ export function WordManagement() {
         {wordPairCount >= 120 && <p>Manage your word pairs using the options below.</p>}
       </div>
 
-      <div className="max-w-4xl mx-auto">
+      <div>
         <Tabs defaultValue="single">
           <TabsList className="grid w-full grid-cols-[repeat(4,minmax(auto,1fr))] overflow-x-auto justify-start">
             <TabsTrigger value="single">Add Single Pair</TabsTrigger>

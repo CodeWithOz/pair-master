@@ -98,7 +98,7 @@ export function ExportWordsForm() {
             checked={(allSelected && exceptions.size === 0) || (pairs.length > 0 && selectedIds.size === pairs.length)}
             onCheckedChange={handleSelectAll}
           />
-          <span className="text-sm font-medium">All ({pairs.length})</span>
+          <span className="text-sm font-medium">All</span>
         </div>
         <div className="font-medium text-center">English</div>
         <div className="font-medium text-center">German</div>
@@ -131,7 +131,7 @@ export function ExportWordsForm() {
         disabled={!anySelected}
         className="w-full bg-black hover:bg-gray-900 text-white"
       >
-        Export Selection
+        Copy to Clipboard
       </Button>
     </div>
   );

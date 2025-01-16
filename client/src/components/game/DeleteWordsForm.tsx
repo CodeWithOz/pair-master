@@ -98,7 +98,7 @@ export function DeleteWordsForm({ onDelete }: DeleteWordsFormProps) {
             checked={(allSelected && exceptions.size === 0) || (pairs.length > 0 && selectedIds.size === pairs.length)}
             onCheckedChange={handleSelectAll}
           />
-          <span className="text-sm font-medium">All ({pairs.length})</span>
+          <span className="text-sm font-medium">All</span>
         </div>
         <div className="font-medium text-center">English</div>
         <div className="font-medium text-center">German</div>

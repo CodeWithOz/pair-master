@@ -181,10 +181,10 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
 
       <TabsContent value="json" className="space-y-4">
         <div className="space-y-2">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm">
             Paste your word pairs in JSON format:
           </p>
-          <p className="text-xs text-gray-500 font-mono">
+          <p className="text-xs font-mono">
             [{"{"}"english": "word", "german": "wort"{"}"}]
           </p>
         </div>
