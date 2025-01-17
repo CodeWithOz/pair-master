@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -75,17 +75,38 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
     setPairs(newPairs);
   };
 
+  const getJsonValidation = (jsonInput: string) => {
+    const parsed = JSON.parse(jsonInput);
+    const validation = wordPairArraySchema.safeParse(parsed);
+    return validation;
+  }
+
+  const isJsonValid = (jsonInput: string) => {
+    try {
+      const validatedJson = getJsonValidation(jsonInput);
+      if (!validatedJson.success) {
+        return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  const isJsonImportBeyondLimit = (jsonInput: string) => {
+    return isImportDisabled(getJsonValidation(jsonInput).data!.length)
+  }
+
   const handleJsonImport = async () => {
     try {
-      const parsed = JSON.parse(jsonInput);
-      const validation = wordPairArraySchema.safeParse(parsed);
+      const validation = getJsonValidation(jsonInput);
 
       if (!validation.success) {
         setJsonError("Invalid format. Please check your JSON structure.");
         return;
       }
 
-      if (isImportDisabled(parsed.length)) {
+      if (isImportDisabled(validation.data.length)) {
         setJsonError("Import would exceed the 50,000 word pair limit");
         return;
       }
@@ -95,7 +116,7 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
       setCurrentCount(newCount);
       toast({
         title: "Success",
-        description: `Added ${parsed.length} word pairs to the database`,
+        description: `Added ${validation.data.length} word pairs to the database`,
       });
       setJsonInput("");
       setJsonError(null);
@@ -228,17 +249,10 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
         {jsonError && <p className="text-sm text-red-500">{jsonError}</p>}
         <Button 
           onClick={handleJsonImport} 
-          disabled={!jsonInput || (() => {
-            try {
-              const parsed = JSON.parse(jsonInput);
-              return isImportDisabled(parsed.length);
-            } catch {
-              return true;
-            }
-          })()} 
+          disabled={!jsonInput || !isJsonValid(jsonInput) || isJsonImportBeyondLimit(jsonInput)} 
           className="w-full"
         >
-          {currentCount >= 50000 ? "Word Pair Limit Reached" : "Import JSON"}
+          {currentCount >= 50000 ? "Word Pair Limit Reached" : isJsonValid(jsonInput) && isJsonImportBeyondLimit(jsonInput) ? "Would Exceed Word Pair Limit" : "Import JSON"}
         </Button>
       </TabsContent>
     </Tabs>
