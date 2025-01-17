@@ -30,7 +30,20 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
   const [pairs, setPairs] = useState<FormWordPair[]>([{ english: "", german: "" }]);
   const [jsonInput, setJsonInput] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
+  const [currentCount, setCurrentCount] = useState(0);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      const count = await db.getWordPairCount();
+      setCurrentCount(count);
+    };
+    fetchCount();
+  }, []);
+
+  const isImportDisabled = (pairsToAdd: number) => {
+    return currentCount + pairsToAdd > 50000;
+  };
 
   const isValidPair = (pair: FormWordPair) =>
     pair.english.trim() !== "" &&
@@ -72,7 +85,14 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
         return;
       }
 
+      if (isImportDisabled(parsed.length)) {
+        setJsonError("Import would exceed the 50,000 word pair limit");
+        return;
+      }
+
       await db.addWordPairs(validation.data);
+      const newCount = await db.getWordPairCount();
+      setCurrentCount(newCount);
       toast({
         title: "Success",
         description: `Added ${parsed.length} word pairs to the database`,
@@ -94,16 +114,21 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
     e.preventDefault();
     if (!isValidForm) return;
 
+    const validPairs = pairs.filter(isValidPair);
+    if (isImportDisabled(validPairs.length)) return;
+
     try {
-      const wordPairs: CreateWordPair[] = pairs.map((pair) => ({
+      const wordPairs: CreateWordPair[] = validPairs.map((pair) => ({
         english: pair.english.trim(),
         german: pair.german.trim(),
       }));
 
       await db.addWordPairs(wordPairs);
+      const newCount = await db.getWordPairCount();
+      setCurrentCount(newCount);
       toast({
         title: "Success",
-        description: `Added ${pairs.length} word pairs to the database`,
+        description: `Added ${validPairs.length} word pairs to the database`,
       });
       setPairs([{ english: "", german: "" }]);
       onImport();
@@ -173,8 +198,15 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
             </div>
           </ScrollArea>
 
-          <Button type="submit" disabled={!isValidForm} className="w-full">
-            Import {pairs.filter(isValidPair).length} Word Pairs
+          <Button 
+            type="submit" 
+            disabled={!isValidForm || isImportDisabled(pairs.filter(isValidPair).length)} 
+            className="w-full"
+          >
+            {currentCount >= 50000 ? "Word Pair Limit Reached" :
+             isImportDisabled(pairs.filter(isValidPair).length) ? 
+             "Would Exceed Word Pair Limit" :
+             `Import ${pairs.filter(isValidPair).length} Word Pairs`}
           </Button>
         </form>
       </TabsContent>
@@ -194,8 +226,19 @@ export function BulkImportForm({ onImport }: BulkImportFormProps) {
           className="min-h-[200px] font-mono"
         />
         {jsonError && <p className="text-sm text-red-500">{jsonError}</p>}
-        <Button onClick={handleJsonImport} disabled={!jsonInput} className="w-full">
-          Import JSON
+        <Button 
+          onClick={handleJsonImport} 
+          disabled={!jsonInput || (() => {
+            try {
+              const parsed = JSON.parse(jsonInput);
+              return isImportDisabled(parsed.length);
+            } catch {
+              return true;
+            }
+          })()} 
+          className="w-full"
+        >
+          {currentCount >= 50000 ? "Word Pair Limit Reached" : "Import JSON"}
         </Button>
       </TabsContent>
     </Tabs>
