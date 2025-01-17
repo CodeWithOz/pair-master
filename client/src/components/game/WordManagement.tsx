@@ -148,7 +148,7 @@ export function WordManagement() {
                       )}
                     />
 
-                    <Button type="submit">Add Word Pair</Button>
+                    <Button type="submit" disabled={!form.formState.isValid || form.formState.isSubmitting}>Add Word Pair</Button>
                   </form>
                 </Form>
               </CardContent>
