@@ -148,7 +148,12 @@ export function WordManagement() {
                       )}
                     />
 
-                    <Button type="submit" disabled={!form.formState.isValid || form.formState.isSubmitting}>Add Word Pair</Button>
+                    <Button 
+                      type="submit" 
+                      disabled={!form.formState.isValid || form.formState.isSubmitting || wordPairCount >= 50000}
+                    >
+                      {wordPairCount >= 50000 ? "Word Pair Limit Reached" : "Add Word Pair"}
+                    </Button>
                   </form>
                 </Form>
               </CardContent>
