@@ -132,7 +132,10 @@ export function GameBoard() {
           variant: "destructive",
         });
       } finally {
-        dispatch({ type: "SET_FETCHING_PAIRS", payload: { isFetching: false } });
+        dispatch({
+          type: "SET_FETCHING_PAIRS",
+          payload: { isFetching: false },
+        });
       }
     };
 
@@ -268,13 +271,13 @@ export function GameBoard() {
           },
         );
 
-        const numRequiredMatchesRemaining = difficultySettings[state.progress.currentLevel].roundPairs[
-          state.progress.currentRound - 1
-        ] - (state.progress.roundMatchedPairs + 1);
+        const numRequiredMatchesRemaining =
+          difficultySettings[state.progress.currentLevel].roundPairs[
+            state.progress.currentRound - 1
+          ] -
+          (state.progress.roundMatchedPairs + 1);
         const animationDuration =
-          numRequiredMatchesRemaining >= 5
-            ? 3000
-            : 1000;
+          numRequiredMatchesRemaining >= 5 ? 3000 : 1000;
         const timeoutId = setTimeout(
           finalizeCardMatch,
           animationDuration,
@@ -375,24 +378,28 @@ export function GameBoard() {
 
       <div className="relative max-w-2xl mx-auto mb-8">
         {/* Round transition and time's up overlays */}
-        {!state.isFetchingPairs && (state.progress.showRoundTransition || state.progress.remainingTime <= 0) && (
-          <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-lg">
-            <p className={`text-2xl font-bold mb-2 ${state.progress.remainingTime <= 0 ? "text-red-600" : "text-green-600"}`}>
-              {state.progress.remainingTime <= 0
-                ? "You ran out of time!"
-                : state.progress.isComplete
-                ? "Congratulations!"
-                : "Nice work so far!"}
-            </p>
-            <p className="text-lg text-gray-900">
-              {state.progress.remainingTime <= 0
-                ? "Try again or select a different level"
-                : state.progress.isComplete
-                ? "You beat this level!"
-                : "Ready to continue?"}
-            </p>
-          </div>
-        )}
+        {!state.isFetchingPairs &&
+          (state.progress.showRoundTransition ||
+            state.progress.remainingTime <= 0) && (
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-lg">
+              <p
+                className={`text-2xl font-bold mb-2 ${state.progress.remainingTime <= 0 ? "text-red-600" : "text-green-600"}`}
+              >
+                {state.progress.remainingTime <= 0
+                  ? "You ran out of time!"
+                  : state.progress.isComplete
+                    ? "Congratulations!"
+                    : "Nice work so far!"}
+              </p>
+              <p className="text-lg text-gray-900">
+                {state.progress.remainingTime <= 0
+                  ? "Try again or select a different level"
+                  : state.progress.isComplete
+                    ? "You beat this level!"
+                    : "Ready to continue?"}
+              </p>
+            </div>
+          )}
 
         {/* Loading overlay */}
         {state.isFetchingPairs && (
@@ -411,7 +418,9 @@ export function GameBoard() {
                   word={card.word}
                   isMatched={card.isMatched}
                   isSelected={state.selectedCards.includes(card.id)}
-                  isMatchAnimation={state.activeMatchAnimations.has(card.pairId)}
+                  isMatchAnimation={state.activeMatchAnimations.has(
+                    card.pairId,
+                  )}
                   isFailAnimation={getIsFailAnimation(card.id)}
                   onClick={() => handleCardClick(card.id)}
                 />
@@ -424,7 +433,9 @@ export function GameBoard() {
                   word={card.word}
                   isMatched={card.isMatched}
                   isSelected={state.selectedCards.includes(card.id)}
-                  isMatchAnimation={state.activeMatchAnimations.has(card.pairId)}
+                  isMatchAnimation={state.activeMatchAnimations.has(
+                    card.pairId,
+                  )}
                   isFailAnimation={getIsFailAnimation(card.id)}
                   onClick={() => handleCardClick(card.id)}
                 />
@@ -455,7 +466,10 @@ export function GameBoard() {
               variant="secondary"
               className="bg-black text-white hover:bg-black/90"
               onClick={() => {
-                dispatch({ type: "SET_RESET_CONFIRM", payload: { show: false } });
+                dispatch({
+                  type: "SET_RESET_CONFIRM",
+                  payload: { show: false },
+                });
                 dispatch({ type: "SET_PAUSE", payload: { isPaused: false } });
               }}
             >
@@ -489,11 +503,7 @@ export function GameBoard() {
                       Next Level
                     </Button>
                   )}
-                  <Button
-                    onClick={resetGame}
-                  >
-                    Reset Level
-                  </Button>
+                  <Button onClick={resetGame}>Reset Level</Button>
                 </>
               ) : (
                 <Button onClick={handleContinue}>Continue</Button>
@@ -504,11 +514,14 @@ export function GameBoard() {
                   if (state.progress.remainingTime <= 0) {
                     resetGame();
                   } else {
-                    dispatch({ type: "SET_PAUSE", payload: { isPaused: true } });
+                    dispatch({
+                      type: "SET_PAUSE",
+                      payload: { isPaused: true },
+                    });
                     dispatch({
                       type: "SET_RESET_CONFIRM",
                       payload: { show: true },
-                    })
+                    });
                   }
                 }}
               >
