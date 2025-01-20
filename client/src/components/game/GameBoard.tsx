@@ -277,7 +277,7 @@ export function GameBoard() {
           ] -
           (state.progress.roundMatchedPairs + 1);
         const animationDuration =
-          numRequiredMatchesRemaining >= 5 ? 3000 : 1000;
+          numRequiredMatchesRemaining >= 5 ? 5000 : 1000;
         const timeoutId = setTimeout(
           finalizeCardMatch,
           animationDuration,
