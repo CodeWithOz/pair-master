@@ -32,7 +32,7 @@ export function Home() {
       </div>
       <footer className="flex flex-col justify-center items-center py-4 text-sm text-muted-foreground">
         <p className="text-center">
-          Creator: <a href="https://x.com/CodeWithOz" className="underline hover:text-foreground transition-colors">Uche Ozoemena</a>
+          Creator: <a href="https://www.linkedin.com/in/uchechukwu-ozoemena/" className="underline hover:text-foreground transition-colors">Uche Ozoemena</a>
         </p>
         <p className="text-center">
           Source code: <a href="https://github.com/CodeWithOz/pair-master" className="underline hover:text-foreground transition-colors">GitHub</a>
